@@ -1,0 +1,31 @@
+import { PRODUCTS, formatPrice, type Product } from './products'
+
+export type Mood = 'gold' | 'mint'
+
+export interface HeroProduct extends Product {
+  mood: Mood
+}
+
+// Hero coverflow order + mood per card — mirrors the demo's HERO_IDS.
+const HERO_ORDER: { id: string; mood: Mood }[] = [
+  { id: 'noire', mood: 'gold' },
+  { id: 'sun', mood: 'mint' },
+  { id: 'giftset', mood: 'gold' },
+  { id: 'etree', mood: 'mint' },
+  { id: 'camel', mood: 'gold' },
+  { id: 'mask', mood: 'gold' },
+]
+
+export const HERO_PRODUCTS: HeroProduct[] = HERO_ORDER.map(({ id, mood }) => {
+  const product = PRODUCTS.find((p) => p.id === id)
+  if (!product) throw new Error(`Hero product not found: ${id}`)
+  return { ...product, mood }
+})
+
+/** Ambient orb colors [--m1, --m2] per mood, from the demo's MOODS. */
+export const MOODS: Record<Mood, [string, string]> = {
+  gold: ['#d9bd7e', '#b4923c'],
+  mint: ['#a9d8c2', '#6fae93'],
+}
+
+export { formatPrice }
