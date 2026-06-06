@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
+    "@fontsource/noto-sans-sc": "^5.2.9",
+    "@fontsource/noto-serif-sc": "^5.2.9",
     "@fontsource/playfair-display": "^5.2.8",
     "autoprefixer": "^10.5.0",
     "clsx": "^2.1.1",

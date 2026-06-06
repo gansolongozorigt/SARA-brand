@@ -1,13 +1,13 @@
 import { REVIEWS } from '../../data/reviews'
-
-const REV = { kick: 'Reviews', title: 'What our customers say' }
+import { useT } from '../../i18n/LanguageContext'
 
 export default function Reviews() {
+  const t = useT()
   return (
     <section className="reviews">
       <div className="sec-head reveal">
-        <span className="sec-kick">{REV.kick}</span>
-        <h2>{REV.title}</h2>
+        <span className="sec-kick">{t('revKick')}</span>
+        <h2>{t('revTitle')}</h2>
       </div>
       <div className="rev-grid">
         {REVIEWS.map((review) => (

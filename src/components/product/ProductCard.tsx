@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { formatPrice, type Product } from '../../data/products'
+import { useT } from '../../i18n/LanguageContext'
 
 interface ProductCardProps {
   product: Product
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const t = useT()
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
 
@@ -43,13 +45,13 @@ export default function ProductCard({ product }: ProductCardProps) {
               <circle cx="9" cy="20" r="1.4" />
               <circle cx="18" cy="20" r="1.4" />
             </svg>
-            Add to cart
+            {t('addCart')}
           </span>
           <span className="done">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.2}>
               <path d="M5 12l5 5L20 6" />
             </svg>
-            Added
+            {t('added')}
           </span>
         </button>
       </div>

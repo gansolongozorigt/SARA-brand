@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
+import { useT } from '../../i18n/LanguageContext'
+import type { TranslationKey } from '../../i18n'
 
 interface InfoItem {
   icon: ReactNode
-  title: string
-  text: string
+  titleKey: TranslationKey
+  textKey: TranslationKey
 }
 
-// Icons + English placeholder text from the design reference.
 const INFO: InfoItem[] = [
   {
     icon: (
@@ -16,8 +17,8 @@ const INFO: InfoItem[] = [
         <circle cx="17.5" cy="18" r="1.6" />
       </svg>
     ),
-    title: 'Delivery',
-    text: 'Same-day delivery in Ulaanbaatar. 2–4 days countryside. Free over 100,000₮.',
+    titleKey: 'delivTitle',
+    textKey: 'delivText',
   },
   {
     icon: (
@@ -26,8 +27,8 @@ const INFO: InfoItem[] = [
         <path d="M3 10h18" />
       </svg>
     ),
-    title: 'Payment',
-    text: 'Pay by QPay, bank transfer or cash. Safe and reliable.',
+    titleKey: 'payTitle',
+    textKey: 'payText',
   },
   {
     icon: (
@@ -36,19 +37,20 @@ const INFO: InfoItem[] = [
         <path d="M3 5v4h4" />
       </svg>
     ),
-    title: 'Returns',
-    text: 'Unopened products can be exchanged or returned within 7 days.',
+    titleKey: 'retTitle',
+    textKey: 'retText',
   },
 ]
 
 export default function InfoCards() {
+  const t = useT()
   return (
     <section className="info-sec">
       {INFO.map((card) => (
-        <div key={card.title} className="info-card reveal">
+        <div key={card.titleKey} className="info-card reveal">
           <div className="ic">{card.icon}</div>
-          <h4>{card.title}</h4>
-          <p>{card.text}</p>
+          <h4>{t(card.titleKey)}</h4>
+          <p>{t(card.textKey)}</p>
         </div>
       ))}
     </section>

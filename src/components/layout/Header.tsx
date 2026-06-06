@@ -1,32 +1,24 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
+import { useLang, useT } from '../../i18n/LanguageContext'
+import { LANGUAGES, type TranslationKey } from '../../i18n'
 
-type Lang = 'mn' | 'en' | 'cn'
-
-const NAV_LINKS = [
-  { id: 'products', label: 'Products' },
-  { id: 'about', label: 'About' },
-  { id: 'contact', label: 'Contact' },
-] as const
-
-const LANGS: { code: Lang; label: string }[] = [
-  { code: 'mn', label: 'МН' },
-  { code: 'en', label: 'EN' },
-  { code: 'cn', label: '中文' },
+const NAV_LINKS: { id: string; key: TranslationKey }[] = [
+  { id: 'products', key: 'navProducts' },
+  { id: 'about', key: 'navAbout' },
+  { id: 'contact', key: 'navContact' },
 ]
 
-const ANNOUNCEMENTS = [
-  'Beauty crafted by a Mongolian woman',
-  'Naturally derived · Refined quality',
-  'Free consultation · 8998 3612',
-]
+const ANN_KEYS: TranslationKey[] = ['ann1', 'ann2', 'ann3']
 
 // Cart is static for now — no cart logic yet.
 const CART_COUNT = 0
 
 export default function Header() {
+  const t = useT()
+  const { lang, setLang } = useLang()
+
   const [scrolled, setScrolled] = useState(false)
-  const [lang, setLang] = useState<Lang>('mn')
   const [activeNav, setActiveNav] = useState<string>('products')
   const [mobOpen, setMobOpen] = useState(false)
   const [pill, setPill] = useState({ width: 0, x: 0, opacity: 0 })
@@ -40,10 +32,10 @@ export default function Header() {
     setPill({ width: el.offsetWidth, x: el.offsetLeft, opacity: 1 })
   }, [])
 
-  // Keep the pill under the active link, and reflow on resize / font load.
+  // Keep the pill under the active link, and reflow on resize / font load / language change.
   useLayoutEffect(() => {
     movePill(activeNav)
-  }, [activeNav, movePill])
+  }, [activeNav, movePill, lang])
 
   useEffect(() => {
     const reflow = () => movePill(activeNav)
@@ -64,9 +56,9 @@ export default function Header() {
     <>
       {/* Top announcement bar */}
       <div className="relative h-[38px] overflow-hidden bg-forest text-center text-[12px] font-medium uppercase leading-[38px] tracking-[0.18em] text-[#eadfca] max-[680px]:text-[10px] max-[680px]:tracking-[0.05em]">
-        {ANNOUNCEMENTS.map((text) => (
-          <span key={text} className="ann-roll">
-            {text}
+        {ANN_KEYS.map((key) => (
+          <span key={key} className="ann-roll">
+            {t(key)}
           </span>
         ))}
       </div>
@@ -116,16 +108,16 @@ export default function Header() {
                   activeNav === link.id ? 'text-gold3' : 'text-muted',
                 )}
               >
-                {link.label}
+                {t(link.key)}
               </a>
             ))}
           </nav>
 
           {/* Right tools */}
           <div className="flex items-center gap-[14px] max-[680px]:gap-[10px]">
-            {/* Language switcher (visual only — no real translation yet) */}
+            {/* Language switcher */}
             <div className="flex overflow-hidden rounded-[30px] border border-line">
-              {LANGS.map((l) => (
+              {LANGUAGES.map((l) => (
                 <button
                   key={l.code}
                   type="button"
@@ -192,7 +184,7 @@ export default function Header() {
             }}
             className="border-b border-line py-[9px] font-serif text-[30px] font-semibold"
           >
-            {link.label}
+            {t(link.key)}
           </a>
         ))}
       </div>

@@ -28,8 +28,9 @@ export default {
         line:     'rgba(140,111,42,0.18)',
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'serif'],
-        sans:  ['Inter', 'sans-serif'],
+        // CJK fallbacks (Noto SC) cover Chinese; Latin/Cyrillic use Playfair/Inter.
+        serif: ['"Playfair Display"', '"Noto Serif SC"', 'serif'],
+        sans:  ['Inter', '"Noto Sans SC"', 'sans-serif'],
       },
     },
   },

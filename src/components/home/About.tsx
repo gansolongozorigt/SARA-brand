@@ -1,34 +1,31 @@
 import aboutImg from '../../assets/about.jpg'
+import { useT } from '../../i18n/LanguageContext'
+import type { TranslationKey } from '../../i18n'
 
-// English i18n placeholders from the design reference.
-const ABOUT = {
-  kick: 'About us',
-  title: 'From the heart of a Mongolian woman',
-  p1: 'SARA is a beauty brand created by a Mongolian woman. We blend naturally derived, trusted formulas with refined design.',
-  p2: 'From skincare to fragrance — our goal is to turn your daily ritual into an art.',
-  stats: [
-    { n: '11+', l: 'Products' },
-    { n: '100%', l: 'Natural' },
-    { n: '3', l: 'Languages' },
-  ],
-}
+// Stat numbers are static; labels are localized. Languages is now 4 (МН/EN/中文/RU).
+const STATS: { n: string; key: TranslationKey }[] = [
+  { n: '11+', key: 'statProducts' },
+  { n: '100%', key: 'statNatural' },
+  { n: '4', key: 'statLang' },
+]
 
 export default function About() {
+  const t = useT()
   return (
     <section id="about" className="about">
       <div className="about-img reveal">
         <img src={aboutImg} alt="SARA beauty products" />
       </div>
       <div className="about-txt reveal">
-        <span className="sec-kick">{ABOUT.kick}</span>
-        <h2>{ABOUT.title}</h2>
-        <p>{ABOUT.p1}</p>
-        <p>{ABOUT.p2}</p>
+        <span className="sec-kick">{t('aboutKick')}</span>
+        <h2>{t('aboutTitle')}</h2>
+        <p>{t('aboutP1')}</p>
+        <p>{t('aboutP2')}</p>
         <div className="about-stats">
-          {ABOUT.stats.map((s) => (
-            <div key={s.l}>
+          {STATS.map((s) => (
+            <div key={s.key}>
               <div className="n">{s.n}</div>
-              <div className="l">{s.l}</div>
+              <div className="l">{t(s.key)}</div>
             </div>
           ))}
         </div>

@@ -9,6 +9,7 @@ import whitetea from '../assets/products/whitetea.jpg'
 import mask from '../assets/products/mask.jpg'
 import hand from '../assets/products/hand.jpg'
 import men from '../assets/products/men.jpg'
+import type { TranslationKey } from '../i18n'
 
 export type Category = 'skin' | 'perfume' | 'mask' | 'men' | 'set'
 export type FilterKey = 'all' | Category
@@ -42,14 +43,14 @@ export const PRODUCTS: Product[] = [
   { id: 'men',      name: 'SARA Specialty Men Set',             tag: 'For Men',      short: 'Oil-control · refreshing',        price: 119000,             category: 'men',     image: men },
 ]
 
-/** Filter pills — keys mirror the demo's FILTERS + FILTER_KEY (English labels). */
-export const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all',     label: 'All' },
-  { key: 'skin',    label: 'Skincare' },
-  { key: 'perfume', label: 'Perfume' },
-  { key: 'mask',    label: 'Masks' },
-  { key: 'men',     label: 'For Men' },
-  { key: 'set',     label: 'Sets' },
+/** Filter pills — keys mirror the demo's FILTERS; labels are localized via i18n. */
+export const FILTERS: { key: FilterKey; labelKey: TranslationKey }[] = [
+  { key: 'all',     labelKey: 'prodAll' },
+  { key: 'skin',    labelKey: 'catSkin' },
+  { key: 'perfume', labelKey: 'catPerfume' },
+  { key: 'mask',    labelKey: 'catMask' },
+  { key: 'men',     labelKey: 'catMen' },
+  { key: 'set',     labelKey: 'catSet' },
 ]
 
 /** Price formatter — matches the demo's fmt(): "159,000₮". */

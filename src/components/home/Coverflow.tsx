@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { HERO_PRODUCTS, MOODS, formatPrice } from '../../data/heroProducts'
+import { useT } from '../../i18n/LanguageContext'
 
 const AUTO_ADVANCE_MS = 4200
-const CF_TIP = '← Rotate · click for details →'
 
 export default function Coverflow() {
+  const t = useT()
   const n = HERO_PRODUCTS.length
   const [cfIndex, setCfIndex] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -63,7 +64,7 @@ export default function Coverflow() {
         })}
       </div>
 
-      <div className="cf-tip">{CF_TIP}</div>
+      <div className="cf-tip">{t('cfTip')}</div>
 
       <div className="cf-arrows">
         <button type="button" aria-label="previous" onClick={() => cfMove(-1)}>
