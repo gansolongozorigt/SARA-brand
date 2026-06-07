@@ -56,14 +56,14 @@ export default function CartDrawer() {
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            {/* Header row — title left, small close pinned top-right, both centered */}
+            {/* Header row — title left, close pinned right, both vertically centered */}
             <div className="flex items-center justify-between gap-[12px] border-b border-line px-[24px] py-[18px]">
               <h2 className="font-serif text-[22px] font-semibold text-ink">{t('cartTitle')}</h2>
               <button
                 type="button"
                 onClick={closeCart}
                 aria-label={t('close')}
-                className="-mr-[4px] grid h-[28px] w-[28px] shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-cream hover:text-ink"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full leading-none text-muted transition-colors hover:bg-cream hover:text-ink"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.6}>
                   <path d="M6 6l12 12M18 6L6 18" />
@@ -92,24 +92,24 @@ export default function CartDrawer() {
                         <div className="cart-name font-serif text-[15px] leading-tight text-ink">{product.name[lang]}</div>
                         <div className="mt-[2px] text-[13px] font-medium text-gold3"><Price amount={product.price} /></div>
                         <div className="mt-auto flex items-center justify-between pt-[10px]">
-                          {/* Quantity stepper — 28px square buttons, glyphs centered, all on one line */}
-                          <div className="flex items-center rounded-full border border-line bg-paper">
+                          {/* Quantity stepper — small square buttons, glyph centered, one row */}
+                          <div className="inline-flex items-center rounded-full border border-line bg-paper">
                             <button
                               type="button"
                               aria-label="decrease quantity"
                               onClick={() => setQty(it.id, it.qty - 1)}
-                              className="grid h-[28px] w-[28px] place-items-center text-[15px] leading-none text-gold3 transition-colors hover:text-ink"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[15px] leading-none text-gold3 transition-colors hover:text-ink"
                             >
                               −
                             </button>
-                            <span className="grid h-[28px] w-[26px] place-items-center text-[13px] font-medium leading-none text-ink">
+                            <span className="inline-flex h-7 min-w-[26px] items-center justify-center text-[13px] font-medium leading-none text-ink">
                               {it.qty}
                             </span>
                             <button
                               type="button"
                               aria-label="increase quantity"
                               onClick={() => setQty(it.id, it.qty + 1)}
-                              className="grid h-[28px] w-[28px] place-items-center text-[15px] leading-none text-gold3 transition-colors hover:text-ink"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[15px] leading-none text-gold3 transition-colors hover:text-ink"
                             >
                               +
                             </button>
