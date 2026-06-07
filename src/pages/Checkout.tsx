@@ -160,7 +160,14 @@ export default function Checkout() {
   function validate(): boolean {
     const e: Partial<Record<FieldKey, string>> = {}
     if (!fullName.trim()) e.fullName = t('vName')
-    if (!/^\d{8}$/.test(phone.replace(/\s+/g, ''))) e.phone = t('vPhone')
+    // Phone: optional leading "+", digits, spaces and dashes; 8–15 digits total
+    // (Mongolian 8-digit numbers pass; longer international numbers pass too).
+    {
+      const phoneTrimmed = phone.trim()
+      const digitCount = phoneTrimmed.replace(/\D/g, '').length
+      const validFormat = /^\+?[\d\s-]+$/.test(phoneTrimmed)
+      if (!validFormat || digitCount < 8 || digitCount > 15) e.phone = t('vPhone')
+    }
     if (!city.trim()) e.city = t('vCity')
     if (!address.trim()) e.address = t('vAddress')
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('vEmail')
@@ -280,7 +287,7 @@ export default function Checkout() {
             <div className="flex flex-col gap-[16px] sm:flex-row">
               <div className="min-w-0 sm:flex-1">
                 <Field label={t('fPhone')} error={errors.phone}>
-                  <input className={cn(inputCls, errors.phone && 'err')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phPhone')} disabled={submitting} inputMode="numeric" autoComplete="tel" />
+                  <input className={cn(inputCls, errors.phone && 'err')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phPhone')} disabled={submitting} inputMode="tel" autoComplete="tel" />
                 </Field>
               </div>
               <div className="min-w-0 sm:flex-1">
