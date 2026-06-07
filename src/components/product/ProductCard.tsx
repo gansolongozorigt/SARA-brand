@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
-import { formatPrice, type Product } from '../../data/products'
+import { type Product } from '../../data/products'
 import { useLang, useT } from '../../i18n/LanguageContext'
+import { useFormatPrice } from '../../lib/useFormatPrice'
 import { useCart } from '../../store/cart'
+import { useProductModal } from '../../store/productModal'
 
 interface ProductCardProps {
   product: Product
@@ -11,7 +13,9 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const t = useT()
   const { lang } = useLang()
+  const fmt = useFormatPrice()
   const addItem = useCart((s) => s.addItem)
+  const openModal = useProductModal((s) => s.open)
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
 
@@ -24,18 +28,20 @@ export default function ProductCard({ product }: ProductCardProps) {
     timer.current = window.setTimeout(() => setAdded(false), 1400)
   }
 
+  const open = () => openModal(product.id)
+
   return (
     <div className="card">
-      <div className="ph">
+      <div className="ph" onClick={open}>
         <span className="tag">{product.tag[lang]}</span>
         <img src={product.image} alt={product.name[lang]} loading="lazy" decoding="async" />
       </div>
       <div className="body">
-        <h3>{product.name[lang]}</h3>
+        <h3 onClick={open}>{product.name[lang]}</h3>
         <div className="short">{product.short[lang]}</div>
         <div className="priceline">
-          <span className="price">{formatPrice(product.price)}</span>
-          {product.old != null && <span className="old">{formatPrice(product.old)}</span>}
+          <span className="price">{fmt(product.price)}</span>
+          {product.old != null && <span className="old">{fmt(product.old)}</span>}
         </div>
         <button type="button" className={cn('atc quick', added && 'added')} onClick={handleAdd}>
           <span className="cartfly">

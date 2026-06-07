@@ -1,4 +1,4 @@
-import { PRODUCTS, formatPrice, type Product } from './products'
+import { PRODUCTS, type Product } from './products'
 
 export type Mood = 'gold' | 'mint'
 
@@ -27,5 +27,3 @@ export const MOODS: Record<Mood, [string, string]> = {
   gold: ['#d9bd7e', '#b4923c'],
   mint: ['#a9d8c2', '#6fae93'],
 }
-
-export { formatPrice }

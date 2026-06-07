@@ -9,6 +9,9 @@ export type { TranslationKey }
 /** A value translated into every supported language. */
 export type Localized = Record<Lang, string>
 
+/** A list value (e.g. spec bullets) translated into every supported language. */
+export type LocalizedList = Record<Lang, string[]>
+
 export const dictionaries: Record<Lang, Record<TranslationKey, string>> = { mn, en, cn, ru }
 
 /**

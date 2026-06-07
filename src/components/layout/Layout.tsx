@@ -3,6 +3,7 @@ import Header from './Header'
 import Footer from './Footer'
 import Background from './Background'
 import CartDrawer from '../cart/CartDrawer'
+import ProductModal from '../product/ProductModal'
 
 export default function Layout() {
   return (
@@ -16,6 +17,7 @@ export default function Layout() {
         <Footer />
       </div>
       <CartDrawer />
+      <ProductModal />
     </>
   )
 }

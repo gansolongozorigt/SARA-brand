@@ -594,3 +594,78 @@ html[lang="mn"] .contactstrip .phone {
 .contactstrip .phone { font-weight: 500; }
 /* Cart item names use Cormorant in Mongolian (Playfair lacks Ү/Ө) */
 html[lang="mn"] .cart-name { font-family: "Cormorant Garamond", "Noto Serif SC", serif; }
+
+/* ===== STEP 5 product detail modal ===== */
+.sheet {
+  position: relative;
+  z-index: 1;
+  width: min(940px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fbf8f1;
+  border-radius: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 50px 90px -30px rgba(40, 30, 8, 0.7);
+}
+.sheet .imgcol {
+  position: relative;
+  background: linear-gradient(160deg, #fdfbf6, #ece2d0);
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  overflow: hidden;
+}
+.sheet .imgcol img {
+  max-height: 420px;
+  width: auto;
+  border-radius: 14px;
+  filter: drop-shadow(0 30px 40px rgba(60, 46, 12, 0.35));
+}
+.sheet .info { padding: 34px 34px 30px; }
+.sheet .info .k { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #8c6f2a; font-weight: 700; }
+.sheet .info h2 { font-family: "Playfair Display", "Noto Serif SC", serif; font-size: 38px; font-weight: 600; line-height: 1.05; margin: 8px 0 4px; }
+.sheet .info .stagline { font-style: italic; color: #4f8e74; font-family: "Playfair Display", "Noto Serif SC", serif; font-size: 19px; margin-bottom: 14px; }
+.sheet .info .desc { color: #7a7367; font-size: 14.5px; line-height: 1.6; margin-bottom: 18px; }
+.sheet .specs { list-style: none; border-top: 1px solid rgba(140, 111, 42, 0.18); padding-top: 14px; margin-bottom: 18px; display: grid; gap: 9px; }
+.sheet .specs li { font-size: 13.5px; display: flex; gap: 9px; align-items: flex-start; color: #26241f; }
+.sheet .specs li::before { content: "✦"; color: #C5A059; font-size: 11px; margin-top: 3px; }
+.sheet .buyrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.sheet .pricebig { display: flex; align-items: baseline; gap: 9px; }
+.sheet .pricebig .p { font-family: "Playfair Display", "Noto Serif SC", serif; font-size: 32px; font-weight: 600; color: #8c6f2a; }
+.sheet .pricebig .o { font-size: 16px; color: #7a7367; text-decoration: line-through; }
+.qty { display: flex; align-items: center; border: 1px solid rgba(140, 111, 42, 0.18); border-radius: 30px; overflow: hidden; }
+.qty button { width: 38px; height: 42px; font-size: 18px; line-height: 1; color: #8c6f2a; display: grid; place-items: center; }
+.qty span { width: 34px; height: 42px; display: grid; place-items: center; font-weight: 600; }
+.sheet .atc { flex: 1; min-width: 170px; padding: 15px 22px; font-size: 14px; }
+.mclose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(251, 248, 241, 0.9);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.4);
+}
+.mclose svg { width: 18px; height: 18px; stroke: #26241f; }
+
+/* Mongolian: modal product name + stagline use Cormorant (Playfair lacks Ү/Ө) */
+html[lang="mn"] .sheet .info h2,
+html[lang="mn"] .sheet .info .stagline {
+  font-family: "Cormorant Garamond", "Noto Serif SC", serif;
+}
+
+@media (max-width: 980px) {
+  .sheet { grid-template-columns: 1fr; max-height: 92vh; }
+  .sheet .imgcol { padding: 24px; }
+  .sheet .imgcol img { max-height: 260px; }
+}
+@media (max-width: 680px) {
+  .sheet .info { padding: 24px 22px 26px; }
+  .sheet .info h2 { font-size: 28px; }
+  .sheet .specs li { font-size: 13px; }
+}

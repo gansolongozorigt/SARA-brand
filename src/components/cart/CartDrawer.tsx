@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart, selectSubtotal } from '../../store/cart'
-import { PRODUCTS, formatPrice } from '../../data/products'
+import { PRODUCTS } from '../../data/products'
 import { useLang, useT } from '../../i18n/LanguageContext'
+import { useFormatPrice } from '../../lib/useFormatPrice'
 
 export default function CartDrawer() {
   const t = useT()
   const { lang } = useLang()
+  const fmt = useFormatPrice()
   const isOpen = useCart((s) => s.isOpen)
   const closeCart = useCart((s) => s.closeCart)
   const items = useCart((s) => s.items)
@@ -53,14 +55,14 @@ export default function CartDrawer() {
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-line px-[24px] py-[18px]">
-              <h2 className="font-serif text-[22px] font-semibold text-ink">{t('cartTitle')}</h2>
+            {/* Header row — title + close vertically centered */}
+            <div className="flex items-center justify-between gap-[12px] border-b border-line px-[24px] py-[18px]">
+              <h2 className="font-serif text-[22px] font-semibold leading-none text-ink">{t('cartTitle')}</h2>
               <button
                 type="button"
                 onClick={closeCart}
                 aria-label={t('close')}
-                className="grid h-[34px] w-[34px] place-items-center rounded-full text-muted transition-colors hover:bg-cream hover:text-ink"
+                className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-cream hover:text-ink"
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8}>
                   <path d="M6 6l12 12M18 6L6 18" />
@@ -87,24 +89,26 @@ export default function CartDrawer() {
                       />
                       <div className="flex min-w-0 flex-1 flex-col">
                         <div className="cart-name font-serif text-[15px] leading-tight text-ink">{product.name[lang]}</div>
-                        <div className="mt-[2px] text-[13px] font-medium text-gold3">{formatPrice(product.price)}</div>
+                        <div className="mt-[2px] text-[13px] font-medium text-gold3">{fmt(product.price)}</div>
                         <div className="mt-auto flex items-center justify-between pt-[10px]">
-                          {/* Quantity stepper */}
+                          {/* Quantity stepper — buttons + value all 30px, glyphs centered */}
                           <div className="flex items-center rounded-full border border-line bg-paper">
                             <button
                               type="button"
                               aria-label="decrease quantity"
                               onClick={() => setQty(it.id, it.qty - 1)}
-                              className="grid h-[28px] w-[28px] place-items-center text-[16px] text-gold3 transition-colors hover:text-ink"
+                              className="grid h-[30px] w-[30px] place-items-center text-[16px] leading-none text-gold3 transition-colors hover:text-ink"
                             >
                               −
                             </button>
-                            <span className="w-[26px] text-center text-[13px] font-medium text-ink">{it.qty}</span>
+                            <span className="grid h-[30px] w-[28px] place-items-center text-[13px] font-medium leading-none text-ink">
+                              {it.qty}
+                            </span>
                             <button
                               type="button"
                               aria-label="increase quantity"
                               onClick={() => setQty(it.id, it.qty + 1)}
-                              className="grid h-[28px] w-[28px] place-items-center text-[16px] text-gold3 transition-colors hover:text-ink"
+                              className="grid h-[30px] w-[30px] place-items-center text-[16px] leading-none text-gold3 transition-colors hover:text-ink"
                             >
                               +
                             </button>
@@ -129,7 +133,7 @@ export default function CartDrawer() {
               <div className="border-t border-line px-[24px] py-[18px]">
                 <div className="flex items-center justify-between pb-[14px]">
                   <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('subtotal')}</span>
-                  <span className="font-serif text-[20px] font-semibold text-ink">{formatPrice(subtotal)}</span>
+                  <span className="font-serif text-[20px] font-semibold text-ink">{fmt(subtotal)}</span>
                 </div>
                 {/* Checkout — placeholder no-op until real checkout is built */}
                 <button
