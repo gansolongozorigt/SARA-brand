@@ -11,7 +11,7 @@
 // the checkout UI never has to be touched again.
 // ============================================================================
 
-export const WEB3FORMS_ACCESS_KEY = 'PASTE_WEB3FORMS_KEY_HERE'
+export const WEB3FORMS_ACCESS_KEY = '591aa615-3e7d-47a1-b4f7-846e8b485e3f'
 
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
 
