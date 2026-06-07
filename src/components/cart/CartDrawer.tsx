@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart, selectSubtotal } from '../../store/cart'
 import { PRODUCTS } from '../../data/products'
@@ -8,6 +9,7 @@ import Price from '../ui/Price'
 export default function CartDrawer() {
   const t = useT()
   const { lang } = useLang()
+  const navigate = useNavigate()
   const isOpen = useCart((s) => s.isOpen)
   const closeCart = useCart((s) => s.closeCart)
   const items = useCart((s) => s.items)
@@ -134,9 +136,13 @@ export default function CartDrawer() {
                   <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('subtotal')}</span>
                   <span className="font-serif text-[20px] font-semibold text-ink"><Price amount={subtotal} /></span>
                 </div>
-                {/* Checkout — placeholder no-op until real checkout is built */}
+                {/* Checkout — close the drawer and go to the checkout route */}
                 <button
                   type="button"
+                  onClick={() => {
+                    closeCart()
+                    navigate('/checkout')
+                  }}
                   className="gold-bg w-full rounded-full py-[13px] text-[13px] font-semibold uppercase tracking-[0.06em] text-[#241c08] transition-transform duration-200 hover:-translate-y-[1px]"
                 >
                   {t('checkout')}

@@ -682,3 +682,53 @@ html[lang="mn"] .sheet .info .stagline {
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
+
+/* ===== STEP 6 checkout: inputs, spinner, skeleton shimmer ===== */
+.co-input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid rgba(140, 111, 42, 0.22);
+  border-radius: 13px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #26241f;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.co-input::placeholder { color: #b3aa99; }
+.co-input:focus {
+  outline: none;
+  border-color: #C5A059;
+  box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15);
+}
+.co-input:disabled { background: #f6f1e8; cursor: not-allowed; }
+.co-input.err {
+  border-color: #c0563d;
+  box-shadow: 0 0 0 3px rgba(192, 86, 61, 0.12);
+}
+.co-textarea { resize: vertical; min-height: 78px; line-height: 1.5; }
+
+.co-spinner {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(36, 28, 8, 0.28);
+  border-top-color: #241c08;
+  animation: co-spin 0.7s linear infinite;
+}
+@keyframes co-spin { to { transform: rotate(360deg); } }
+
+.co-skel {
+  position: relative;
+  overflow: hidden;
+  background: rgba(140, 111, 42, 0.12);
+}
+.co-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: co-shimmer 1.2s infinite;
+}
+@keyframes co-shimmer { to { transform: translateX(100%); } }
