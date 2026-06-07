@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { cn } from '../../lib/utils'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
+import { useCart, selectCount } from '../../store/cart'
 import LanguageSwitcher from './LanguageSwitcher'
 
 const NAV_LINKS: { id: string; key: TranslationKey }[] = [
@@ -12,12 +13,11 @@ const NAV_LINKS: { id: string; key: TranslationKey }[] = [
 
 const ANN_KEYS: TranslationKey[] = ['ann1', 'ann2', 'ann3']
 
-// Cart is static for now — no cart logic yet.
-const CART_COUNT = 0
-
 export default function Header() {
   const t = useT()
   const { lang } = useLang()
+  const cartCount = useCart(selectCount)
+  const openCart = useCart((s) => s.openCart)
 
   const [scrolled, setScrolled] = useState(false)
   const [activeNav, setActiveNav] = useState<string>('products')
@@ -127,15 +127,15 @@ export default function Header() {
               </svg>
             </button>
 
-            {/* Cart */}
-            <button type="button" aria-label="cart" className="cartbtn">
+            {/* Cart — opens the drawer; badge shows total item count */}
+            <button type="button" aria-label="cart" className="cartbtn" onClick={openCart}>
               <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7}>
                 <path d="M6 6h15l-1.5 9h-12z" />
                 <circle cx="9" cy="20" r="1.4" />
                 <circle cx="18" cy="20" r="1.4" />
                 <path d="M6 6 5 3H2" />
               </svg>
-              <span className={cn('cartcount', CART_COUNT > 0 && 'show')}>{CART_COUNT}</span>
+              <span className={cn('cartcount', cartCount > 0 && 'show')}>{cartCount}</span>
             </button>
 
             {/* Burger (mobile only) */}

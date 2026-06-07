@@ -588,3 +588,9 @@ html[lang="mn"] .contactstrip .phone {
   .contactstrip .in { padding: 10px 18px; flex-direction: row; gap: 10px; }
   .contactstrip .phone { font-size: 14px; }
 }
+
+/* ===== STEP 4 quick fixes + cart ===== */
+/* Contact strip phone is no longer bold */
+.contactstrip .phone { font-weight: 500; }
+/* Cart item names use Cormorant in Mongolian (Playfair lacks Ү/Ө) */
+html[lang="mn"] .cart-name { font-family: "Cormorant Garamond", "Noto Serif SC", serif; }

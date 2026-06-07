@@ -39,7 +39,7 @@ export default function LanguageSwitcher() {
         onClick={() => setOpen((o) => !o)}
         className="cartbtn"
       >
-        <span className="text-[13px] font-bold leading-none tracking-tight text-gold3">{current.short}</span>
+        <span className="text-[13px] font-medium leading-none tracking-tight text-gold3">{current.short}</span>
       </button>
 
       <AnimatePresence>
@@ -71,13 +71,13 @@ export default function LanguageSwitcher() {
                   >
                     <span
                       className={cn(
-                        'w-[26px] shrink-0 text-[12px] font-bold tracking-tight',
+                        'w-[26px] shrink-0 text-[12px] font-medium tracking-tight',
                         isActive ? 'text-[#241c08]' : 'text-gold3',
                       )}
                     >
                       {l.short}
                     </span>
-                    <span className={cn('text-[13.5px]', isActive ? 'font-semibold text-[#241c08]' : 'text-charcoal')}>
+                    <span className={cn('text-[13.5px]', isActive ? 'font-medium text-[#241c08]' : 'text-charcoal')}>
                       {l.native}
                     </span>
                   </button>

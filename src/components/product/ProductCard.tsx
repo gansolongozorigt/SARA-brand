@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { formatPrice, type Product } from '../../data/products'
 import { useLang, useT } from '../../i18n/LanguageContext'
+import { useCart } from '../../store/cart'
 
 interface ProductCardProps {
   product: Product
@@ -10,12 +11,14 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const t = useT()
   const { lang } = useLang()
+  const addItem = useCart((s) => s.addItem)
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
 
-  // Visual-only "Added" morph — no real cart wiring yet.
+  // Add to the cart + play the "Added" morph (does not open the drawer).
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
+    addItem(product.id)
     setAdded(true)
     if (timer.current !== null) window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => setAdded(false), 1400)
