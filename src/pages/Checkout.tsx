@@ -27,6 +27,7 @@ type FieldKey = 'fullName' | 'phone' | 'city' | 'address' | 'email'
 /** Order summary card — used both in the form view and the confirmation view. */
 function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
   const t = useT()
+  const { lang } = useLang()
   const fmt = useFormatPrice()
   return (
     <div className="rounded-[20px] border border-line bg-ivory/70 p-[22px] backdrop-blur-[2px]">
@@ -34,15 +35,18 @@ function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
       <ul className="mt-[16px] flex flex-col gap-[14px]">
         {rows.map((r) => {
           const p = PRODUCTS.find((x) => x.id === r.id)
+          // Render the name in the ACTIVE UI language (live), falling back to the
+          // name captured at order time only if the product no longer exists.
+          const displayName = p ? p.name[lang] : r.name
           return (
             <li key={r.id} className="flex items-center gap-[12px]">
               <img
                 src={p?.image}
-                alt={r.name}
+                alt={displayName}
                 className="h-[56px] w-[48px] shrink-0 rounded-[10px] object-cover"
               />
               <div className="min-w-0 flex-1">
-                <div className="truncate font-serif text-[14px] leading-tight text-ink">{r.name}</div>
+                <div className="cart-name truncate font-serif text-[14px] leading-tight text-ink">{displayName}</div>
                 <div className="mt-[2px] text-[12px] text-muted">
                   {t('coQty')}: {r.qty}
                 </div>
@@ -211,7 +215,7 @@ export default function Checkout() {
       lineTotal: it.lineTotal,
     }))
     return (
-      <section className="mx-auto w-full max-w-[760px] px-[24px] pb-[90px] pt-[52px]">
+      <section className="checkout mx-auto w-full max-w-[760px] px-[24px] pb-[90px] pt-[52px]">
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}>
           <div className="text-center">
             <motion.div
@@ -248,7 +252,7 @@ export default function Checkout() {
   // ---------- Empty ----------
   if (rows.length === 0) {
     return (
-      <section className="mx-auto flex min-h-[58vh] w-full max-w-[600px] flex-col items-center justify-center px-[24px] py-[70px] text-center">
+      <section className="checkout mx-auto flex min-h-[58vh] w-full max-w-[600px] flex-col items-center justify-center px-[24px] py-[70px] text-center">
         <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-gold3">{t('coKick')}</div>
         <h1 className="mt-[8px] font-serif text-[30px] font-semibold text-ink">{t('emptyCart')}</h1>
         <p className="mt-[10px] text-[14px] text-muted">{t('coEmptyMsg')}</p>
@@ -260,7 +264,7 @@ export default function Checkout() {
   // ---------- Form + summary ----------
   const inputCls = 'co-input'
   return (
-    <section className="mx-auto w-full max-w-[1080px] px-[24px] pb-[90px] pt-[46px]">
+    <section className="checkout mx-auto w-full max-w-[1080px] px-[24px] pb-[90px] pt-[46px]">
       <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-gold3">{t('coKick')}</div>
       <h1 className="mt-[6px] font-serif text-[34px] font-semibold leading-tight text-ink max-[680px]:text-[27px]">{t('coTitle')}</h1>
 

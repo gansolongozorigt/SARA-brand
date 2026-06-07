@@ -595,6 +595,15 @@ html[lang="mn"] .contactstrip .phone {
 /* Cart item names use Cormorant in Mongolian (Playfair lacks Ү/Ө) */
 html[lang="mn"] .cart-name { font-family: "Cormorant Garamond", "Noto Serif SC", serif; }
 
+/* ===== STEP 6 checkout: Mongolian headings ===== */
+/* The shared mn rule above covers h2–h6, but the checkout uses <h1> for its page
+   headings (e.g. "Захиалга хүлээн авлаа"). Playfair Display ships no Ү/Ө glyphs,
+   so scope the checkout's h1 to Cormorant — the same brand serif as the rest of
+   the Mongolian UI. Scoped to .checkout so the Hero <h1> keeps Playfair. */
+html[lang="mn"] .checkout h1 {
+  font-family: "Cormorant Garamond", "Noto Serif SC", serif;
+}
+
 /* ===== STEP 5 product detail modal ===== */
 .sheet {
   position: relative;
