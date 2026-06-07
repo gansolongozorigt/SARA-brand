@@ -521,3 +521,70 @@ section { position: relative; z-index: 2; }
   .contactstrip .in { padding: 34px 22px; flex-direction: column; text-align: center; gap: 14px; }
   .contactstrip .phone { font-size: 26px; }
 }
+
+/* ===== BATCH1 cf-tip fix — stable tip + arrows across all 4 languages ===== */
+/* Original left:50%+translateX limited width to the right half (~313px), forcing
+   the longer RU tip to wrap and look uneven. Use the full stage width, center the
+   text, and reserve a 2-line height so the arrow row stays put in every language. */
+.cf-tip {
+  left: 0;
+  right: 0;
+  transform: none;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.25;
+}
+
+/* ===== BATCH1 Mongolian heading font ===== */
+/* Playfair Display has no Ү (U+04AE) / Ө (U+04E8) glyphs offline, so Mongolian
+   headings fall back inconsistently. Cormorant Garamond (the demo's original serif)
+   covers them — scoped to lang=mn so EN/中文/RU keep Playfair. */
+html[lang="mn"] :is(h2, h3, h4, h5, h6),
+html[lang="mn"] .marquee span,
+html[lang="mn"] .rev p,
+html[lang="mn"] .about-stats .n,
+html[lang="mn"] .contactstrip .phone {
+  font-family: "Cormorant Garamond", "Noto Serif SC", serif;
+}
+
+/* ===== BATCH 3 visual polish ===== */
+
+/* (2) Smaller, more refined hero CTA buttons (~15-20% down) */
+.btn { padding: 12px 25px; font-size: 12px; gap: 8px; }
+
+/* (3) Thinner marquee ribbon */
+.marquee { padding: 8px 0; }
+.marquee span { font-size: 20px; }
+
+/* (4) Thin, single-line contact strip (≈ announcement-bar height, understated) */
+.contactstrip .in { padding: 11px 26px; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.contactstrip h3 {
+  font-family: "Inter", "Noto Sans SC", sans-serif !important;
+  font-size: 12px;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d8cbb0;
+}
+.contactstrip .phone {
+  font-family: "Inter", "Noto Sans SC", sans-serif !important;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #e7cd8f;
+}
+
+/* (5) Reviews: kicker only (h2 removed) — tighten the header spacing */
+.reviews .sec-head { padding-top: 12px; }
+
+@media (max-width: 680px) {
+  .btn { padding: 10px 20px; font-size: 11px; }
+  .marquee { padding: 7px 0; }
+  .marquee span { font-size: 15px; }
+  .contactstrip .in { padding: 10px 18px; flex-direction: row; gap: 10px; }
+  .contactstrip .phone { font-size: 14px; }
+}

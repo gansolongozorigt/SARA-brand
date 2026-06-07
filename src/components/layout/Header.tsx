@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { useLang, useT } from '../../i18n/LanguageContext'
-import { LANGUAGES, type TranslationKey } from '../../i18n'
+import type { TranslationKey } from '../../i18n'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const NAV_LINKS: { id: string; key: TranslationKey }[] = [
   { id: 'products', key: 'navProducts' },
@@ -16,7 +17,7 @@ const CART_COUNT = 0
 
 export default function Header() {
   const t = useT()
-  const { lang, setLang } = useLang()
+  const { lang } = useLang()
 
   const [scrolled, setScrolled] = useState(false)
   const [activeNav, setActiveNav] = useState<string>('products')
@@ -63,7 +64,7 @@ export default function Header() {
         ))}
       </div>
 
-      {/* Sticky nav */}
+      {/* Sticky nav — logo left, nav absolutely centered on the page, tools right */}
       <header
         className={cn(
           'sticky top-0 z-50 border-b border-line backdrop-blur-[14px] transition-all duration-300',
@@ -72,15 +73,15 @@ export default function Header() {
             : 'bg-[rgba(247,242,233,0.72)]',
         )}
       >
-        <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-[20px] px-[26px] py-[14px] max-[680px]:px-[18px] max-[680px]:py-[12px]">
+        <div className="relative mx-auto flex max-w-[1240px] items-center justify-between gap-[20px] px-[26px] py-[14px] max-[680px]:px-[18px] max-[680px]:py-[12px]">
           {/* Brand */}
           <div className="pl-[0.42em] font-serif text-[30px] font-semibold tracking-[0.42em] max-[680px]:text-[22px] max-[680px]:tracking-[0.32em]">
             <span className="gold-text">SARA</span>
           </div>
 
-          {/* Center nav links with sliding pill */}
+          {/* Center nav links — absolutely centered relative to the page */}
           <nav
-            className="relative flex gap-[6px] max-[680px]:hidden"
+            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-[6px] max-[680px]:hidden"
             onMouseLeave={() => movePill(activeNav)}
           >
             <span
@@ -115,22 +116,8 @@ export default function Header() {
 
           {/* Right tools */}
           <div className="flex items-center gap-[14px] max-[680px]:gap-[10px]">
-            {/* Language switcher */}
-            <div className="flex overflow-hidden rounded-[30px] border border-line">
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  type="button"
-                  onClick={() => setLang(l.code)}
-                  className={cn(
-                    'px-[11px] py-[6px] text-[11px] font-bold tracking-[0.06em] transition-all duration-[250ms]',
-                    lang === l.code ? 'gold-bg text-[#241c08]' : 'text-muted',
-                  )}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
+            {/* Language switcher (compact code button + dropdown) */}
+            <LanguageSwitcher />
 
             {/* Account (logged-out: icon only) */}
             <button type="button" aria-label="account" className="cartbtn acctbtn">

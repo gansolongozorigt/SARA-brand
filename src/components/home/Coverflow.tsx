@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { HERO_PRODUCTS, MOODS, formatPrice } from '../../data/heroProducts'
-import { useT } from '../../i18n/LanguageContext'
+import { useLang, useT } from '../../i18n/LanguageContext'
 
 const AUTO_ADVANCE_MS = 4200
 
 export default function Coverflow() {
   const t = useT()
+  const { lang } = useLang()
   const n = HERO_PRODUCTS.length
   const [cfIndex, setCfIndex] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -53,10 +54,10 @@ export default function Coverflow() {
                 if (!isActive) setCfIndex(i)
               }}
             >
-              <img src={p.image} alt={p.name} />
+              <img src={p.image} alt={p.name[lang]} />
               <div className="glow" />
               <div className="cf-cap">
-                <h4>{p.name.split(' ').slice(0, 3).join(' ')}</h4>
+                <h4>{p.name[lang].split(' ').slice(0, 3).join(' ')}</h4>
                 <div className="pr">{formatPrice(p.price)}</div>
               </div>
             </div>

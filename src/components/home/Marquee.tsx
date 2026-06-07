@@ -1,13 +1,16 @@
-// First words mirror the design reference's first 8 products (PRODUCTS.slice(0,8)).
-const MARQUEE_WORDS = ['SARA', 'Sun', 'Brightening', 'Camel', 'SARA', 'Anti-Aging', 'Centella', 'White']
+import { PRODUCTS } from '../../data/products'
+import { useLang } from '../../i18n/LanguageContext'
 
 export default function Marquee() {
-  // Duplicate the words so the -50% scroll animation loops seamlessly.
-  const words = [...MARQUEE_WORDS, ...MARQUEE_WORDS]
+  const { lang } = useLang()
+  // First word of the first 8 products' names in the active language (mirrors the demo).
+  const words = PRODUCTS.slice(0, 8).map((p) => p.name[lang].split(' ')[0])
+  // Duplicate so the -50% scroll animation loops seamlessly.
+  const track = [...words, ...words]
   return (
     <div className="marquee">
       <div className="track">
-        {words.map((word, i) => (
+        {track.map((word, i) => (
           <span key={i}>{word}</span>
         ))}
       </div>

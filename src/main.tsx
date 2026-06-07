@@ -12,6 +12,12 @@ import '@fontsource/playfair-display/700.css'
 import '@fontsource/playfair-display/400-italic.css'
 import '@fontsource/playfair-display/500-italic.css'
 
+// Cormorant Garamond — used for Mongolian headings only (Playfair Display has no
+// cyrillic-ext glyphs for Ү/Ө). Weights: 600 normal, 400/500 italic.
+import '@fontsource/cormorant-garamond/600.css'
+import '@fontsource/cormorant-garamond/400-italic.css'
+import '@fontsource/cormorant-garamond/500-italic.css'
+
 // CJK fallback fonts (Chinese)
 import '@fontsource/noto-serif-sc/400.css'
 import '@fontsource/noto-serif-sc/600.css'

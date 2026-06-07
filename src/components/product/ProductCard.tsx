@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { formatPrice, type Product } from '../../data/products'
-import { useT } from '../../i18n/LanguageContext'
+import { useLang, useT } from '../../i18n/LanguageContext'
 
 interface ProductCardProps {
   product: Product
@@ -9,6 +9,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const t = useT()
+  const { lang } = useLang()
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
 
@@ -23,12 +24,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="card">
       <div className="ph">
-        <span className="tag">{product.tag}</span>
-        <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
+        <span className="tag">{product.tag[lang]}</span>
+        <img src={product.image} alt={product.name[lang]} loading="lazy" decoding="async" />
       </div>
       <div className="body">
-        <h3>{product.name}</h3>
-        <div className="short">{product.short}</div>
+        <h3>{product.name[lang]}</h3>
+        <div className="short">{product.short[lang]}</div>
         <div className="priceline">
           <span className="price">{formatPrice(product.price)}</span>
           {product.old != null && <span className="old">{formatPrice(product.old)}</span>}

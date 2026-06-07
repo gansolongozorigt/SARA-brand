@@ -1,24 +1,25 @@
 import { REVIEWS } from '../../data/reviews'
-import { useT } from '../../i18n/LanguageContext'
+import { useLang, useT } from '../../i18n/LanguageContext'
 
 export default function Reviews() {
   const t = useT()
+  const { lang } = useLang()
   return (
     <section className="reviews">
+      {/* Kicker only — the large revTitle h2 was removed in batch 3 (key kept, unused) */}
       <div className="sec-head reveal">
         <span className="sec-kick">{t('revKick')}</span>
-        <h2>{t('revTitle')}</h2>
       </div>
       <div className="rev-grid">
         {REVIEWS.map((review) => (
-          <div key={review.name} className="rev reveal">
+          <div key={review.initial} className="rev reveal">
             <div className="stars">{'★'.repeat(review.rating)}</div>
-            <p>{`"${review.text}"`}</p>
+            <p>{`"${review.text[lang]}"`}</p>
             <div className="who">
               <div className="av">{review.initial}</div>
               <div>
-                <div className="nm">{review.name}</div>
-                <div className="rl">{review.role}</div>
+                <div className="nm">{review.name[lang]}</div>
+                <div className="rl">{review.role[lang]}</div>
               </div>
             </div>
           </div>
