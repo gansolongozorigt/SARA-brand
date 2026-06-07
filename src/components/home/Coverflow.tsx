@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { HERO_PRODUCTS, MOODS } from '../../data/heroProducts'
 import { useLang, useT } from '../../i18n/LanguageContext'
-import { useFormatPrice } from '../../lib/useFormatPrice'
+import Price from '../ui/Price'
 import { useProductModal } from '../../store/productModal'
 
 const AUTO_ADVANCE_MS = 4200
@@ -10,7 +10,6 @@ const AUTO_ADVANCE_MS = 4200
 export default function Coverflow() {
   const t = useT()
   const { lang } = useLang()
-  const fmt = useFormatPrice()
   const openModal = useProductModal((s) => s.open)
   const n = HERO_PRODUCTS.length
   const [cfIndex, setCfIndex] = useState(0)
@@ -63,7 +62,7 @@ export default function Coverflow() {
               <div className="glow" />
               <div className="cf-cap">
                 <h4>{p.name[lang].split(' ').slice(0, 3).join(' ')}</h4>
-                <div className="pr">{fmt(p.price)}</div>
+                <div className="pr"><Price amount={p.price} /></div>
               </div>
             </div>
           )

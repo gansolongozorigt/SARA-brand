@@ -5,12 +5,11 @@ import { PRODUCTS } from '../../data/products'
 import { useProductModal } from '../../store/productModal'
 import { useCart } from '../../store/cart'
 import { useLang, useT } from '../../i18n/LanguageContext'
-import { useFormatPrice } from '../../lib/useFormatPrice'
+import Price from '../ui/Price'
 
 export default function ProductModal() {
   const t = useT()
   const { lang } = useLang()
-  const fmt = useFormatPrice()
   const productId = useProductModal((s) => s.productId)
   const close = useProductModal((s) => s.close)
   const addItem = useCart((s) => s.addItem)
@@ -100,8 +99,8 @@ export default function ProductModal() {
 
               <div className="buyrow">
                 <div className="pricebig">
-                  <span className="p">{fmt(product.price)}</span>
-                  {product.old != null && <span className="o">{fmt(product.old)}</span>}
+                  <span className="p"><Price amount={product.price} /></span>
+                  {product.old != null && <span className="o"><Price amount={product.old} /></span>}
                 </div>
                 <div className="qty">
                   <button type="button" aria-label="decrease quantity" onClick={() => setQty((q) => Math.max(1, q - 1))}>

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { type Product } from '../../data/products'
 import { useLang, useT } from '../../i18n/LanguageContext'
-import { useFormatPrice } from '../../lib/useFormatPrice'
+import Price from '../ui/Price'
 import { useCart } from '../../store/cart'
 import { useProductModal } from '../../store/productModal'
 
@@ -13,7 +13,6 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const t = useT()
   const { lang } = useLang()
-  const fmt = useFormatPrice()
   const addItem = useCart((s) => s.addItem)
   const openModal = useProductModal((s) => s.open)
   const [added, setAdded] = useState(false)
@@ -40,8 +39,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         <h3 onClick={open}>{product.name[lang]}</h3>
         <div className="short">{product.short[lang]}</div>
         <div className="priceline">
-          <span className="price">{fmt(product.price)}</span>
-          {product.old != null && <span className="old">{fmt(product.old)}</span>}
+          <span className="price"><Price amount={product.price} /></span>
+          {product.old != null && <span className="old"><Price amount={product.old} /></span>}
         </div>
         <button type="button" className={cn('atc quick', added && 'added')} onClick={handleAdd}>
           <span className="cartfly">

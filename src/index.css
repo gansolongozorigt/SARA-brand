@@ -669,3 +669,16 @@ html[lang="mn"] .sheet .info .stagline {
   .sheet .info h2 { font-size: 28px; }
   .sheet .specs li { font-size: 13px; }
 }
+
+/* ===== price typography: number in big serif, unit smaller + muted ===== */
+.price-num {
+  font-weight: inherit;
+}
+.price-unit {
+  font-size: 0.55em;
+  font-weight: 400;
+  opacity: 0.6;
+  margin-left: 0.18em;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}

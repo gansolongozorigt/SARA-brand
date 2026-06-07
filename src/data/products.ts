@@ -171,5 +171,15 @@ export const FILTERS: { key: FilterKey; labelKey: TranslationKey }[] = [
  * Language-aware price formatter: Mongolian shows the ₮ symbol ("249,000₮");
  * EN/CN/RU show "249,000 MNT" so non-Mongolian visitors understand the currency.
  */
-export const formatPrice = (n: number, lang: Lang): string =>
-  n.toLocaleString('en-US') + (lang === 'mn' ? '₮' : ' MNT')
+export const formatPriceParts = (
+  n: number,
+  lang: Lang,
+): { num: string; unit: string } => ({
+  num: n.toLocaleString('en-US'),
+  unit: lang === 'mn' ? '₮' : 'MNT',
+})
+
+export const formatPrice = (n: number, lang: Lang): string => {
+  const { num, unit } = formatPriceParts(n, lang)
+  return lang === 'mn' ? `${num}${unit}` : `${num} ${unit}`
+}
