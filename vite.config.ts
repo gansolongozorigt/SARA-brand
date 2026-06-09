@@ -28,7 +28,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Fonts (woff/woff2) intentionally excluded from precache — they're the
+        // @fontsource CJK bulk (~35 MB). Served offline via runtimeCaching below.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         // SPA fallback — unknown routes resolve to index.html (keeps /about, /contact, /checkout working offline).
         navigateFallback: '/index.html',
         runtimeCaching: [
