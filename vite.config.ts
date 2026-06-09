@@ -8,17 +8,49 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Existing static assets in /public that aren't import-referenced — precache them.
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'og-image.png'],
       manifest: {
-        name: 'SARA',
+        name: 'SARA — Luxury skincare & perfume',
         short_name: 'SARA',
-        theme_color: '#C5A059',
-        background_color: '#FAFAFA',
+        description: 'SARA — Luxury skincare & perfume. Crafted by a Mongolian woman.',
+        lang: 'mn',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
+        orientation: 'portrait',
+        background_color: '#2A2A2A',
+        theme_color: '#2A2A2A',
         icons: [
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // SPA fallback — unknown routes resolve to index.html (keeps /about, /contact, /checkout working offline).
+        navigateFallback: '/index.html',
+        runtimeCaching: [
           {
-            src: '/vite.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
+            // Self-hosted @fontsource fonts.
+            urlPattern: /\.(?:woff2?|ttf|otf|eot)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'sara-fonts',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Product / brand images (jpg/png/webp/etc).
+            urlPattern: /\.(?:png|jpe?g|webp|gif|avif|svg)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'sara-images',
+              expiration: { maxEntries: 150, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
         ],
       },
