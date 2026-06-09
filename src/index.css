@@ -18,6 +18,20 @@
   }
 }
 
+/* ===== Lock horizontal scroll / overscroll (mobile + standalone PWA) =====
+   `clip` (not `hidden`) prevents horizontal overflow WITHOUT creating a scroll
+   container, so the sticky header keeps working and vertical scroll is untouched. */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: clip;
+}
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
 /* Gold gradient text — used for the SARA logo and gold headings (from the design reference) */
 .gold-text {
   background: linear-gradient(135deg, #e7cd8f, #C5A059, #8c6f2a, #dcc184);
@@ -188,6 +202,9 @@
   position: relative;
   height: 520px;
   perspective: 1700px;
+  /* Vertical scroll still pans the page; horizontal gestures stay with the
+     carousel and never drag/scroll the page sideways. */
+  touch-action: pan-y;
 }
 .coverflow {
   position: absolute;
@@ -333,7 +350,10 @@
 /* ---------- hero / coverflow / marquee — responsive ---------- */
 @media (max-width: 980px) {
   .hero { grid-template-columns: 1fr; padding-top: 34px; }
-  .stage { height: 430px; order: -1; }
+  /* Stage stacks above the hero text on mobile; reserve room below it for the
+     prev/next arrows so they never overlap the hint line or the hero eyebrow/heading. */
+  .stage { height: 430px; order: -1; margin-bottom: 64px; }
+  .cf-arrows { bottom: -54px; }
 }
 @media (max-width: 680px) {
   .hero { padding: 22px 22px 64px; gap: 14px; }
