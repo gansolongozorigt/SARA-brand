@@ -599,8 +599,10 @@ html[lang="mn"] .cart-name { font-family: "Cormorant Garamond", "Noto Serif SC",
 /* The shared mn rule above covers h2–h6, but the checkout uses <h1> for its page
    headings (e.g. "Захиалга хүлээн авлаа"). Playfair Display ships no Ү/Ө glyphs,
    so scope the checkout's h1 to Cormorant — the same brand serif as the rest of
-   the Mongolian UI. Scoped to .checkout so the Hero <h1> keeps Playfair. */
-html[lang="mn"] .checkout h1 {
+   the Mongolian UI. Scoped to .checkout / .page so the Hero <h1> keeps Playfair.
+   .page covers the standalone /about and /contact pages. */
+html[lang="mn"] .checkout h1,
+html[lang="mn"] .page h1 {
   font-family: "Cormorant Garamond", "Noto Serif SC", serif;
 }
 

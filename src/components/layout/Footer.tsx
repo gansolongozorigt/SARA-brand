@@ -1,7 +1,12 @@
+import { Link } from 'react-router-dom'
 import { useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
 
-const EXPLORE_KEYS: TranslationKey[] = ['navProducts', 'navAbout', 'navContact']
+const EXPLORE: { key: TranslationKey; to: string }[] = [
+  { key: 'navProducts', to: '/' },
+  { key: 'navAbout', to: '/about' },
+  { key: 'navContact', to: '/contact' },
+]
 
 export default function Footer() {
   const t = useT()
@@ -10,9 +15,12 @@ export default function Footer() {
       <div className="mx-auto grid max-w-[1240px] grid-cols-[1.4fr_1fr_1fr] gap-[34px] max-[980px]:grid-cols-2 max-[680px]:grid-cols-1 max-[680px]:gap-[24px]">
         {/* Brand + blurb — the SARA logo is gold on every background */}
         <div>
-          <div className="gold-text mb-[14px] pl-[0.42em] font-serif text-[34px] font-semibold tracking-[0.42em] max-[680px]:text-[28px]">
+          <Link
+            to="/"
+            className="gold-text mb-[14px] inline-block pl-[0.42em] font-serif text-[34px] font-semibold tracking-[0.42em] max-[680px]:text-[28px]"
+          >
             SARA
-          </div>
+          </Link>
           <p className="max-w-[320px] text-[14px] text-[#9c9483] max-[680px]:text-[13px]">{t('footAbout')}</p>
         </div>
 
@@ -20,12 +28,14 @@ export default function Footer() {
         <div>
           <h5 className="mb-[14px] font-sans text-[12px] uppercase tracking-[0.18em] text-gold2">{t('footExplore')}</h5>
           <ul className="flex flex-col gap-[9px]">
-            {EXPLORE_KEYS.map((key) => (
-              <li
-                key={key}
-                className="cursor-pointer text-[14px] text-[#b8af9c] transition-colors duration-[250ms] hover:text-white"
-              >
-                {t(key)}
+            {EXPLORE.map(({ key, to }) => (
+              <li key={key}>
+                <Link
+                  to={to}
+                  className="text-[14px] text-[#b8af9c] transition-colors duration-[250ms] hover:text-white"
+                >
+                  {t(key)}
+                </Link>
               </li>
             ))}
           </ul>

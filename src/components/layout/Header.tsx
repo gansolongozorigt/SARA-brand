@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
 import { useCart, selectCount } from '../../store/cart'
 import LanguageSwitcher from './LanguageSwitcher'
 
-const NAV_LINKS: { id: string; key: TranslationKey }[] = [
-  { id: 'products', key: 'navProducts' },
-  { id: 'about', key: 'navAbout' },
-  { id: 'contact', key: 'navContact' },
+// Products scrolls to the home shop section; About/Contact are their own routes.
+const NAV_LINKS: { id: string; key: TranslationKey; to: string; hash?: string }[] = [
+  { id: 'products', key: 'navProducts', to: '/', hash: 'products' },
+  { id: 'about', key: 'navAbout', to: '/about' },
+  { id: 'contact', key: 'navContact', to: '/contact' },
 ]
 
 const ANN_KEYS: TranslationKey[] = ['ann1', 'ann2', 'ann3']
@@ -16,6 +18,7 @@ const ANN_KEYS: TranslationKey[] = ['ann1', 'ann2', 'ann3']
 export default function Header() {
   const t = useT()
   const { lang } = useLang()
+  const location = useLocation()
   const cartCount = useCart(selectCount)
   const openCart = useCart((s) => s.openCart)
 
@@ -25,6 +28,12 @@ export default function Header() {
   const [pill, setPill] = useState({ width: 0, x: 0, opacity: 0 })
 
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({})
+
+  // Keep the active nav item in sync with the current route.
+  useEffect(() => {
+    const p = location.pathname
+    setActiveNav(p === '/about' ? 'about' : p === '/contact' ? 'contact' : 'products')
+  }, [location.pathname])
 
   // Position the sliding pill under a given nav link.
   const movePill = useCallback((id: string) => {
@@ -53,6 +62,14 @@ export default function Header() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Products: if already on home, smooth-scroll to the shop section.
+  const onNavClick = (link: (typeof NAV_LINKS)[number]) => {
+    setMobOpen(false)
+    if (link.hash && location.pathname === '/') {
+      document.getElementById(link.hash)?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
     <>
       {/* Top announcement bar */}
@@ -74,10 +91,13 @@ export default function Header() {
         )}
       >
         <div className="relative mx-auto flex max-w-[1240px] items-center justify-between gap-[20px] px-[26px] py-[14px] max-[680px]:px-[18px] max-[680px]:py-[12px]">
-          {/* Brand */}
-          <div className="pl-[0.42em] font-serif text-[30px] font-semibold tracking-[0.42em] max-[680px]:text-[22px] max-[680px]:tracking-[0.32em]">
+          {/* Brand — links home */}
+          <Link
+            to="/"
+            className="pl-[0.42em] font-serif text-[30px] font-semibold tracking-[0.42em] max-[680px]:text-[22px] max-[680px]:tracking-[0.32em]"
+          >
             <span className="gold-text">SARA</span>
-          </div>
+          </Link>
 
           {/* Center nav links — absolutely centered relative to the page */}
           <nav
@@ -93,24 +113,21 @@ export default function Header() {
               }}
             />
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.id}
-                href={`#${link.id}`}
+                to={link.to}
                 ref={(el) => {
                   linkRefs.current[link.id] = el
                 }}
                 onMouseEnter={() => movePill(link.id)}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setActiveNav(link.id)
-                }}
+                onClick={() => onNavClick(link)}
                 className={cn(
                   'relative z-[1] px-[18px] py-[9px] text-[13.5px] font-semibold uppercase tracking-[0.08em] transition-colors duration-300 hover:text-gold3',
                   activeNav === link.id ? 'text-gold3' : 'text-muted',
                 )}
               >
                 {t(link.key)}
-              </a>
+              </Link>
             ))}
           </nav>
 
@@ -161,18 +178,14 @@ export default function Header() {
         )}
       >
         {NAV_LINKS.map((link) => (
-          <a
+          <Link
             key={link.id}
-            href={`#${link.id}`}
-            onClick={(e) => {
-              e.preventDefault()
-              setActiveNav(link.id)
-              setMobOpen(false)
-            }}
+            to={link.to}
+            onClick={() => onNavClick(link)}
             className="border-b border-line py-[9px] font-serif text-[30px] font-semibold"
           >
             {t(link.key)}
-          </a>
+          </Link>
         ))}
       </div>
     </>
