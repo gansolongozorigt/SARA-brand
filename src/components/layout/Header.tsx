@@ -15,6 +15,10 @@ const NAV_LINKS: { id: string; key: TranslationKey; to: string; hash?: string }[
 
 const ANN_KEYS: TranslationKey[] = ['ann1', 'ann2', 'ann3']
 
+// Accounts/login isn't built yet — hide the header account button for now.
+// Flip to true to re-enable it (the button markup is kept below).
+const ENABLE_ACCOUNTS = false
+
 export default function Header() {
   const t = useT()
   const { lang } = useLang()
@@ -136,13 +140,15 @@ export default function Header() {
             {/* Language switcher (compact code button + dropdown) */}
             <LanguageSwitcher />
 
-            {/* Account (logged-out: icon only) */}
-            <button type="button" aria-label="account" className="cartbtn acctbtn">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7}>
-                <circle cx="12" cy="8" r="3.4" />
-                <path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5" />
-              </svg>
-            </button>
+            {/* Account (logged-out: icon only) — hidden until accounts ship */}
+            {ENABLE_ACCOUNTS && (
+              <button type="button" aria-label="account" className="cartbtn acctbtn">
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth={1.7}>
+                  <circle cx="12" cy="8" r="3.4" />
+                  <path d="M5 20c1.2-3.6 4-5 7-5s5.8 1.4 7 5" />
+                </svg>
+              </button>
+            )}
 
             {/* Cart — opens the drawer; badge shows total item count */}
             <button type="button" aria-label="cart" className="cartbtn" onClick={openCart}>
