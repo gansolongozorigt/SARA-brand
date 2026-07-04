@@ -25,6 +25,13 @@ import '@fontsource/noto-serif-sc/700.css'
 import '@fontsource/noto-sans-sc/400.css'
 import '@fontsource/noto-sans-sc/500.css'
 
+// Korean (Hangul) — body + headings fallback. Like the SC fonts, these split into
+// many per-subset woff files that are runtime-cached (not precached), so the
+// installable app stays small.
+import '@fontsource/noto-sans-kr/400.css'
+import '@fontsource/noto-sans-kr/500.css'
+import '@fontsource/noto-sans-kr/700.css'
+
 import './index.css'
 import App from './App.tsx'
 import { LanguageProvider } from './i18n/LanguageContext'

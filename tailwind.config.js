@@ -28,9 +28,11 @@ export default {
         line:     'rgba(140,111,42,0.18)',
       },
       fontFamily: {
-        // CJK fallbacks (Noto SC) cover Chinese; Latin/Cyrillic use Playfair/Inter.
-        serif: ['"Playfair Display"', '"Noto Serif SC"', 'serif'],
-        sans:  ['Inter', '"Noto Sans SC"', 'sans-serif'],
+        // CJK fallbacks (Noto SC) cover Chinese; Noto Sans KR covers Korean Hangul.
+        // Latin/Cyrillic use Playfair/Inter; the CJK/KR fallbacks only kick in for
+        // glyphs the earlier fonts lack, so other languages render unchanged.
+        serif: ['"Playfair Display"', '"Noto Serif SC"', '"Noto Sans KR"', 'serif'],
+        sans:  ['Inter', '"Noto Sans SC"', '"Noto Sans KR"', 'sans-serif'],
       },
     },
   },

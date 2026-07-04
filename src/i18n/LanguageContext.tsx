@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { dictionaries, type Lang, type TranslationKey } from './index'
 
 const STORAGE_KEY = 'sara-lang'
-const VALID_LANGS: Lang[] = ['mn', 'en', 'cn', 'ru']
+const VALID_LANGS: Lang[] = ['mn', 'en', 'cn', 'ru', 'ko']
 
 interface LanguageContextValue {
   lang: Lang
