@@ -40,6 +40,7 @@ export const ru: Record<TranslationKey, string> = {
   footMade: "Сделано с ❤ в Монголии",
   prodAll: "Все",
   catSkin: "Уход за кожей",
+  catBody: "Уход за телом",
   catPerfume: "Парфюм",
   catMask: "Маски",
   catMen: "Для мужчин",

@@ -38,6 +38,7 @@ export const mn = {
   footMade: "Монголд ❤ зүрх сэтгэлээр бүтээв",
   prodAll: "Бүгд",
   catSkin: "Арьс арчилгаа",
+  catBody: "Бие арчилгаа",
   catPerfume: "Үнэртэн",
   catMask: "Маск",
   catMen: "Эрэгтэй",

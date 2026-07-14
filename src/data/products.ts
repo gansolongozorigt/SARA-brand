@@ -11,7 +11,7 @@ import hand from '../assets/products/hand.jpg'
 import men from '../assets/products/men.jpg'
 import type { Lang, Localized, LocalizedList, TranslationKey } from '../i18n'
 
-export type Category = 'skin' | 'perfume' | 'mask' | 'men' | 'set'
+export type Category = 'skin' | 'perfume' | 'mask' | 'men' | 'set' | 'bodycare'
 export type FilterKey = 'all' | Category
 
 export interface Product {
@@ -159,9 +159,10 @@ export const PRODUCTS: Product[] = [
 
 /** Filter pills — keys mirror the demo's FILTERS; labels are localized via i18n. */
 export const FILTERS: { key: FilterKey; labelKey: TranslationKey }[] = [
-  { key: 'all',     labelKey: 'prodAll' },
-  { key: 'skin',    labelKey: 'catSkin' },
-  { key: 'perfume', labelKey: 'catPerfume' },
+  { key: 'all',      labelKey: 'prodAll' },
+  { key: 'skin',     labelKey: 'catSkin' },
+  { key: 'bodycare', labelKey: 'catBody' },
+  { key: 'perfume',  labelKey: 'catPerfume' },
   { key: 'mask',    labelKey: 'catMask' },
   { key: 'men',     labelKey: 'catMen' },
   { key: 'set',     labelKey: 'catSet' },
