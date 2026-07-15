@@ -58,7 +58,7 @@ export default function Coverflow() {
                 else setCfIndex(i)
               }}
             >
-              <img src={p.image} alt={p.name[lang]} />
+              <img src={p.images[0]} alt={p.name[lang]} />
               <div className="glow" />
               <div className="cf-cap">
                 <h4>{p.name[lang].split(' ').slice(0, 3).join(' ')}</h4>

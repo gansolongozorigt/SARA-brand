@@ -33,7 +33,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="card">
       <div className="ph" onClick={open}>
         <span className="tag">{product.tag[lang]}</span>
-        <img src={product.image} alt={product.name[lang]} loading="lazy" decoding="async" />
+        <img src={product.images[0]} alt={product.name[lang]} loading="lazy" decoding="async" />
       </div>
       <div className="body">
         <h3 onClick={open}>{product.name[lang]}</h3>

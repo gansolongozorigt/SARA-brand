@@ -41,7 +41,7 @@ function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
           return (
             <li key={r.id} className="flex items-center gap-[12px]">
               <img
-                src={p?.image}
+                src={p?.images[0]}
                 alt={displayName}
                 className="h-[56px] w-[48px] shrink-0 rounded-[10px] object-cover"
               />

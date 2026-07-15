@@ -17,12 +17,14 @@ export default function ProductModal() {
   const product = productId ? PRODUCTS.find((p) => p.id === productId) ?? null : null
 
   const [qty, setQty] = useState(1)
+  const [imgIdx, setImgIdx] = useState(0)
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
 
-  // Reset the quantity each time a new product opens.
+  // Reset quantity + gallery each time a new product opens.
   useEffect(() => {
     setQty(1)
+    setImgIdx(0)
   }, [productId])
 
   // Escape closes; lock body scroll while open.
@@ -83,19 +85,65 @@ export default function ProductModal() {
             </button>
 
             <div className="imgcol">
-              <img src={product.image} alt={product.name[lang]} />
+              <img className="mainimg" src={product.images[imgIdx]} alt={product.name[lang]} />
+              {product.images.length > 1 && (
+                <div className="thumbs">
+                  {product.images.map((src, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={cn('thumb', i === imgIdx && 'on')}
+                      onClick={() => setImgIdx(i)}
+                      aria-label={`image ${i + 1}`}
+                    >
+                      <img src={src} alt="" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="info">
               <div className="k">{product.tag[lang]}</div>
               <h2>{product.name[lang]}</h2>
-              <div className="stagline">{product.short[lang]}</div>
-              <div className="desc">{product.desc[lang]}</div>
-              <ul className="specs">
-                {product.specs[lang].map((spec, i) => (
-                  <li key={i}>{spec}</li>
-                ))}
-              </ul>
+              {product.short[lang] && <div className="stagline">{product.short[lang]}</div>}
+              {product.desc[lang] && <div className="desc">{product.desc[lang]}</div>}
+              {product.specs[lang].length > 0 && (
+                <ul className="specs">
+                  {product.specs[lang].map((spec, i) => (
+                    <li key={i}>{spec}</li>
+                  ))}
+                </ul>
+              )}
+
+              {(product.size || product.usage || product.skinType || product.ingredients) && (
+                <dl className="pdetails">
+                  {product.size && (
+                    <div className="pdrow">
+                      <dt>{t('specSize')}</dt>
+                      <dd>{product.size[lang]}</dd>
+                    </div>
+                  )}
+                  {product.skinType && (
+                    <div className="pdrow">
+                      <dt>{t('specSkin')}</dt>
+                      <dd>{product.skinType[lang]}</dd>
+                    </div>
+                  )}
+                  {product.usage && (
+                    <div className="pdrow">
+                      <dt>{t('specUsage')}</dt>
+                      <dd>{product.usage[lang]}</dd>
+                    </div>
+                  )}
+                  {product.ingredients && (
+                    <div className="pdrow">
+                      <dt>{t('specIngredients')}</dt>
+                      <dd>{product.ingredients[lang]}</dd>
+                    </div>
+                  )}
+                </dl>
+              )}
 
               <div className="buyrow">
                 <div className="pricebig">

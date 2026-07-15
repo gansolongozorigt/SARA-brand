@@ -6,14 +6,14 @@ export interface HeroProduct extends Product {
   mood: Mood
 }
 
-// Hero coverflow order + mood per card — mirrors the demo's HERO_IDS.
+// Hero coverflow order + mood per card — visually strong picks from the real catalog.
 const HERO_ORDER: { id: string; mood: Mood }[] = [
   { id: 'noire', mood: 'gold' },
-  { id: 'sun', mood: 'mint' },
-  { id: 'giftset', mood: 'gold' },
-  { id: 'etree', mood: 'mint' },
-  { id: 'camel', mood: 'gold' },
-  { id: 'mask', mood: 'gold' },
+  { id: 'etree_perfume', mood: 'mint' },
+  { id: 'sunscreen_set', mood: 'gold' },
+  { id: 'camel_cream', mood: 'mint' },
+  { id: 'ampoule_mask', mood: 'gold' },
+  { id: 'skin_set', mood: 'mint' },
 ]
 
 export const HERO_PRODUCTS: HeroProduct[] = HERO_ORDER.map(({ id, mood }) => {
