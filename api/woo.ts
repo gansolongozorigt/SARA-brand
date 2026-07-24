@@ -3,11 +3,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 /**
  * Server-side WooCommerce READ proxy.
  *
- * Exposes a tiny, allowlisted read surface of the WooCommerce Store REST API so
- * the browser never sees the consumer key/secret. Credentials come only from
- * server env vars (never VITE_-prefixed, never client-supplied) and are injected
- * as query-string params — this host strips the Authorization header, so Basic
- * Auth would 401; query-string auth over HTTPS is the confirmed-working method.
+ * Concrete route (/api/woo). All /api/woo/<sub-path> requests are funneled here by
+ * the rewrite in vercel.json — this project (Vite, zero-config api/) does not
+ * reliably honor a Next.js-style [...path] catch-all for nested segments, so we
+ * route explicitly instead. The rewrite passes the sub-path in __wpath.
+ *
+ * Exposes a tiny allowlisted read surface so the browser never sees the consumer
+ * key/secret. Credentials come only from server env (never VITE_-prefixed, never
+ * client-supplied) and are injected as query params — this host strips the
+ * Authorization header, so Basic Auth 401s; query-string auth over HTTPS works.
  *
  * Allowed (GET only):
  *   /api/woo/products
@@ -16,8 +20,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
  * Everything else → 403. Non-GET → 405. No orders/customers/settings/writes ever.
  */
 
-// Client query params we forward (everything else is stripped). consumer_key /
-// consumer_secret are deliberately NOT here — the client can never supply them.
+// Client query params we forward (everything else — including __wpath and any
+// client-supplied consumer_key/secret — is stripped).
 const ALLOWED_QUERY = ['per_page', 'page', 'category', 'slug', 'orderby', 'order', 'search'] as const
 
 function requireEnv() {
@@ -45,10 +49,17 @@ function wcBase(url: string): string {
   return /\/wp-json\/wc\/v\d/.test(trimmed) ? trimmed : `${trimmed}/wp-json/wc/v3`
 }
 
-// True path from the URL (not req.query.path) so a client cannot spoof it via ?path=.
-function pathSegments(reqUrl: string | undefined): string[] {
-  const { pathname } = new URL(reqUrl ?? '/', 'http://internal')
-  const rest = pathname.replace(/^\/api\/woo\/?/, '')
+// The WooCommerce sub-path. Primary source is __wpath (set by the vercel.json
+// rewrite from the matched URL path); fall back to parsing req.url. The allowlist
+// below is the real security boundary, so a spoofed value can only reach a
+// permitted read path or get a 403 — never a write/other resource.
+function subSegments(req: VercelRequest): string[] {
+  const wp = req.query.__wpath
+  let rest = (Array.isArray(wp) ? wp[0] : wp) ?? ''
+  if (!rest) {
+    const { pathname } = new URL(req.url ?? '/', 'http://internal')
+    rest = pathname.replace(/^\/api\/woo\/?/, '')
+  }
   return rest.split('/').filter(Boolean).map(decodeURIComponent)
 }
 
@@ -75,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Server misconfiguration' })
   }
 
-  const segments = pathSegments(req.url)
+  const segments = subSegments(req)
   if (!isAllowed(segments)) {
     return res.status(403).json({ error: 'Forbidden' })
   }
@@ -121,6 +132,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
 
-  const data = await upstream.json()
-  return res.status(200).json(data)
+  return res.status(200).json(await upstream.json())
 }
