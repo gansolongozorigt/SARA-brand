@@ -31,8 +31,19 @@ export default defineConfig({
         // Fonts (woff/woff2) intentionally excluded from precache — they're the
         // @fontsource CJK bulk (~35 MB). Served offline via runtimeCaching below.
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Ensure returning visitors get the corrected worker promptly and old
+        // precache buckets are cleared (registerType 'autoUpdate' already implies
+        // skipWaiting/clientsClaim; stated explicitly for clarity).
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         // SPA fallback — unknown routes resolve to index.html (keeps /about, /contact, /checkout working offline).
         navigateFallback: '/index.html',
+        // ...but NEVER serve the SPA shell for /api/* — those are server endpoints
+        // (the WooCommerce read proxy). Without this, navigating to /api/woo/*
+        // returns the cached index.html instead of the JSON. The proxy responses
+        // are cached by the edge CDN (s-maxage=300); the SW must not touch them.
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             // Self-hosted @fontsource fonts.
