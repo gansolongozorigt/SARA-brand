@@ -4,9 +4,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
  * Server-side WooCommerce READ proxy.
  *
  * Concrete route (/api/woo). All /api/woo/<sub-path> requests are funneled here by
- * the rewrite in vercel.json — this project (Vite, zero-config api/) does not
- * reliably honor a Next.js-style [...path] catch-all for nested segments, so we
- * route explicitly instead. The rewrite passes the sub-path in __wpath.
+ * the rewrite in vercel.json (/api/woo/:path+ → /api/woo?wpath=:path+) — this
+ * project (Vite, zero-config api/) does not reliably honor a [...path] catch-all
+ * for nested segments, so we route explicitly.
  *
  * Exposes a tiny allowlisted read surface so the browser never sees the consumer
  * key/secret. Credentials come only from server env (never VITE_-prefixed, never
@@ -20,9 +20,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
  * Everything else → 403. Non-GET → 405. No orders/customers/settings/writes ever.
  */
 
-// Client query params we forward (everything else — including __wpath and any
+// Client query params we forward (everything else — including wpath and any
 // client-supplied consumer_key/secret — is stripped).
 const ALLOWED_QUERY = ['per_page', 'page', 'category', 'slug', 'orderby', 'order', 'search'] as const
+
+// TEMP: set to true to include a non-sensitive `debug` object on 403 responses
+// while we confirm path extraction on this deployment. Remove once verified.
+const DEBUG = true
 
 function requireEnv() {
   const { WOO_API_URL, WOO_CONSUMER_KEY, WOO_CONSUMER_SECRET } = process.env
@@ -49,18 +53,53 @@ function wcBase(url: string): string {
   return /\/wp-json\/wc\/v\d/.test(trimmed) ? trimmed : `${trimmed}/wp-json/wc/v3`
 }
 
-// The WooCommerce sub-path. Primary source is __wpath (set by the vercel.json
-// rewrite from the matched URL path); fall back to parsing req.url. The allowlist
-// below is the real security boundary, so a spoofed value can only reach a
-// permitted read path or get a 403 — never a write/other resource.
-function subSegments(req: VercelRequest): string[] {
-  const wp = req.query.__wpath
-  let rest = (Array.isArray(wp) ? wp[0] : wp) ?? ''
-  if (!rest) {
-    const { pathname } = new URL(req.url ?? '/', 'http://internal')
-    rest = pathname.replace(/^\/api\/woo\/?/, '')
+const first = (v: string | string[] | undefined): string => (Array.isArray(v) ? (v[0] ?? '') : (v ?? ''))
+// Pull the part after "/api/woo/" out of a path/URI (ignores route patterns with brackets).
+function afterPrefix(s: string): string {
+  const path = (s || '').split('?')[0]
+  const m = path.match(/\/api\/woo\/(.+)$/)
+  return m && !m[1].includes('[') ? m[1] : ''
+}
+
+/**
+ * Extract the WooCommerce sub-path robustly across pre/post-rewrite URL shapes.
+ * Tries, in order: the rewrite's ?wpath param (req.query, then the raw req.url
+ * query), then the original path from req.url and Vercel's forwarded-path headers.
+ * The allowlist below is the real security boundary — a spoofed value can only
+ * reach a permitted read path or get a 403, never a write/other resource.
+ */
+function extractSubPath(req: VercelRequest): { segments: string[]; debug: Record<string, unknown> } {
+  const h = req.headers
+  const url = new URL(req.url ?? '/', 'http://internal')
+
+  const wpathQuery = first(req.query.wpath)
+  const wpathUrlQuery = url.searchParams.get('wpath') ?? ''
+  const xForwardedUri = first(h['x-forwarded-uri'] as string | string[] | undefined)
+  const xOriginalPath = first(h['x-vercel-original-path'] as string | string[] | undefined)
+  const xMatchedPath = first(h['x-matched-path'] as string | string[] | undefined)
+
+  let rest =
+    wpathQuery ||
+    wpathUrlQuery ||
+    afterPrefix(url.pathname) ||
+    afterPrefix(xForwardedUri) ||
+    afterPrefix(xOriginalPath) ||
+    afterPrefix(xMatchedPath)
+
+  rest = rest.split('?')[0]
+  const segments = rest.split('/').filter(Boolean).map(decodeURIComponent)
+
+  const debug = {
+    reqUrl: req.url,
+    pathname: url.pathname,
+    wpathQuery,
+    wpathUrlQuery,
+    xForwardedUri,
+    xOriginalPath,
+    xMatchedPath,
+    segments,
   }
-  return rest.split('/').filter(Boolean).map(decodeURIComponent)
+  return { segments, debug }
 }
 
 function isAllowed(p: string[]): boolean {
@@ -86,9 +125,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Server misconfiguration' })
   }
 
-  const segments = subSegments(req)
+  const { segments, debug } = extractSubPath(req)
+  // TEMP diagnostics — never logs credentials (only routing/path info).
+  console.error('[woo-proxy] path-debug', JSON.stringify(debug))
+
   if (!isAllowed(segments)) {
-    return res.status(403).json({ error: 'Forbidden' })
+    return res.status(403).json(DEBUG ? { error: 'Forbidden', debug } : { error: 'Forbidden' })
   }
 
   // Build upstream query from allowlisted params only; cap per_page at 100.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/api/woo/:path+", "destination": "/api/woo?__wpath=:path+" }
+    { "source": "/api/woo/:path+", "destination": "/api/woo?wpath=:path+" }
   ]
 }
