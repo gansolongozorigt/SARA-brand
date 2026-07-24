@@ -72,6 +72,10 @@ function extractSubPath(req: VercelRequest): { segments: string[]; debug: Record
   const h = req.headers
   const url = new URL(req.url ?? '/', 'http://internal')
 
+  // Vercel auto-appends the named rewrite group as a clean query param (?path=…),
+  // with no trailing whitespace — prefer it. wpath and the path/header shapes are
+  // fallbacks for any deployment that doesn't provide `path`.
+  const pathQuery = first(req.query.path)
   const wpathQuery = first(req.query.wpath)
   const wpathUrlQuery = url.searchParams.get('wpath') ?? ''
   const xForwardedUri = first(h['x-forwarded-uri'] as string | string[] | undefined)
@@ -79,6 +83,7 @@ function extractSubPath(req: VercelRequest): { segments: string[]; debug: Record
   const xMatchedPath = first(h['x-matched-path'] as string | string[] | undefined)
 
   let rest =
+    pathQuery ||
     wpathQuery ||
     wpathUrlQuery ||
     afterPrefix(url.pathname) ||
@@ -87,11 +92,17 @@ function extractSubPath(req: VercelRequest): { segments: string[]; debug: Record
     afterPrefix(xMatchedPath)
 
   rest = rest.split('?')[0]
-  const segments = rest.split('/').filter(Boolean).map(decodeURIComponent)
+  // Defensively trim each segment and drop empties, so a stray space (or a double
+  // slash) can never leak into the allowlist check or the upstream URL.
+  const segments = rest
+    .split('/')
+    .map((s) => decodeURIComponent(s).trim())
+    .filter(Boolean)
 
   const debug = {
     reqUrl: req.url,
     pathname: url.pathname,
+    pathQuery,
     wpathQuery,
     wpathUrlQuery,
     xForwardedUri,
