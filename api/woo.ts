@@ -24,10 +24,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 // client-supplied consumer_key/secret — is stripped).
 const ALLOWED_QUERY = ['per_page', 'page', 'category', 'slug', 'orderby', 'order', 'search'] as const
 
-// TEMP: set to true to include a non-sensitive `debug` object on 403 responses
-// while we confirm path extraction on this deployment. Remove once verified.
-const DEBUG = true
-
 function requireEnv() {
   const { WOO_API_URL, WOO_CONSUMER_KEY, WOO_CONSUMER_SECRET } = process.env
   const missing = (
@@ -68,49 +64,29 @@ function afterPrefix(s: string): string {
  * The allowlist below is the real security boundary — a spoofed value can only
  * reach a permitted read path or get a 403, never a write/other resource.
  */
-function extractSubPath(req: VercelRequest): { segments: string[]; debug: Record<string, unknown> } {
+function extractSubPath(req: VercelRequest): string[] {
   const h = req.headers
   const url = new URL(req.url ?? '/', 'http://internal')
 
   // Vercel auto-appends the named rewrite group as a clean query param (?path=…),
   // with no trailing whitespace — prefer it. wpath and the path/header shapes are
   // fallbacks for any deployment that doesn't provide `path`.
-  const pathQuery = first(req.query.path)
-  const wpathQuery = first(req.query.wpath)
-  const wpathUrlQuery = url.searchParams.get('wpath') ?? ''
-  const xForwardedUri = first(h['x-forwarded-uri'] as string | string[] | undefined)
-  const xOriginalPath = first(h['x-vercel-original-path'] as string | string[] | undefined)
-  const xMatchedPath = first(h['x-matched-path'] as string | string[] | undefined)
-
   let rest =
-    pathQuery ||
-    wpathQuery ||
-    wpathUrlQuery ||
+    first(req.query.path) ||
+    first(req.query.wpath) ||
+    (url.searchParams.get('wpath') ?? '') ||
     afterPrefix(url.pathname) ||
-    afterPrefix(xForwardedUri) ||
-    afterPrefix(xOriginalPath) ||
-    afterPrefix(xMatchedPath)
+    afterPrefix(first(h['x-forwarded-uri'] as string | string[] | undefined)) ||
+    afterPrefix(first(h['x-vercel-original-path'] as string | string[] | undefined)) ||
+    afterPrefix(first(h['x-matched-path'] as string | string[] | undefined))
 
   rest = rest.split('?')[0]
   // Defensively trim each segment and drop empties, so a stray space (or a double
   // slash) can never leak into the allowlist check or the upstream URL.
-  const segments = rest
+  return rest
     .split('/')
     .map((s) => decodeURIComponent(s).trim())
     .filter(Boolean)
-
-  const debug = {
-    reqUrl: req.url,
-    pathname: url.pathname,
-    pathQuery,
-    wpathQuery,
-    wpathUrlQuery,
-    xForwardedUri,
-    xOriginalPath,
-    xMatchedPath,
-    segments,
-  }
-  return { segments, debug }
 }
 
 function isAllowed(p: string[]): boolean {
@@ -136,12 +112,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Server misconfiguration' })
   }
 
-  const { segments, debug } = extractSubPath(req)
-  // TEMP diagnostics — never logs credentials (only routing/path info).
-  console.error('[woo-proxy] path-debug', JSON.stringify(debug))
+  const segments = extractSubPath(req)
 
   if (!isAllowed(segments)) {
-    return res.status(403).json(DEBUG ? { error: 'Forbidden', debug } : { error: 'Forbidden' })
+    return res.status(403).json({ error: 'Forbidden' })
   }
 
   // Build upstream query from allowlisted params only; cap per_page at 100.
