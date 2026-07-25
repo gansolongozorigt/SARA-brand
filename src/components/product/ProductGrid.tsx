@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { PRODUCTS, type FilterKey } from '../../data/products'
+import { type FilterKey } from '../../data/products'
+import { useLiveProducts } from '../../store/livePrices'
 import { useT } from '../../i18n/LanguageContext'
 import Filters from './Filters'
 import ProductCard from './ProductCard'
@@ -7,7 +8,8 @@ import ProductCard from './ProductCard'
 export default function ProductGrid() {
   const t = useT()
   const [filter, setFilter] = useState<FilterKey>('all')
-  const visible = PRODUCTS.filter((p) => filter === 'all' || p.category === filter)
+  const products = useLiveProducts()
+  const visible = products.filter((p) => filter === 'all' || p.category === filter)
 
   return (
     <section id="products">

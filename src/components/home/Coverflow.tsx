@@ -4,6 +4,7 @@ import { HERO_PRODUCTS, MOODS } from '../../data/heroProducts'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import Price from '../ui/Price'
 import { useProductModal } from '../../store/productModal'
+import { useLivePrices } from '../../store/livePrices'
 
 const AUTO_ADVANCE_MS = 4200
 
@@ -11,6 +12,7 @@ export default function Coverflow() {
   const t = useT()
   const { lang } = useLang()
   const openModal = useProductModal((s) => s.open)
+  const overlays = useLivePrices((s) => s.overlays)
   const n = HERO_PRODUCTS.length
   const [cfIndex, setCfIndex] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -62,7 +64,7 @@ export default function Coverflow() {
               <div className="glow" />
               <div className="cf-cap">
                 <h4>{p.name[lang].split(' ').slice(0, 3).join(' ')}</h4>
-                <div className="pr"><Price amount={p.price} /></div>
+                <div className="pr"><Price amount={overlays[p.id]?.price ?? p.price} /></div>
               </div>
             </div>
           )

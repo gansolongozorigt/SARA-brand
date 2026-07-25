@@ -53,6 +53,7 @@ import skin_set_2 from '../assets/products/skin_set_2.jpg'
 import chakra_device_1 from '../assets/products/chakra_device_1.jpg'
 import chakra_device_2 from '../assets/products/chakra_device_2.jpg'
 import type { Lang, Localized, LocalizedList, TranslationKey } from '../i18n'
+import type { WooStockStatus } from '../lib/wooPrices'
 
 export type Category = 'skin' | 'perfume' | 'mask' | 'men' | 'set' | 'bodycare'
 export type FilterKey = 'all' | Category
@@ -73,6 +74,12 @@ export interface Product {
   skinType?: Localized
   ingredients?: Localized
   featured?: boolean
+  /**
+   * Live stock status from WooCommerce, merged in at runtime (undefined until the
+   * live-price fetch resolves, or if the product has no Woo match). Surfaced so the
+   * UI can react to out-of-stock later — no UI consumes it yet.
+   */
+  stockStatus?: WooStockStatus
 }
 
 export const PRODUCTS: Product[] = [
