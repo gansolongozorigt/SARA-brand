@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
-import { PRODUCTS } from '../../data/products'
+import { useLiveProduct } from '../../store/livePrices'
 import { useProductModal } from '../../store/productModal'
 import { useCart } from '../../store/cart'
 import { useLang, useT } from '../../i18n/LanguageContext'
@@ -14,7 +14,7 @@ export default function ProductModal() {
   const close = useProductModal((s) => s.close)
   const addItem = useCart((s) => s.addItem)
 
-  const product = productId ? PRODUCTS.find((p) => p.id === productId) ?? null : null
+  const product = useLiveProduct(productId)
 
   const [qty, setQty] = useState(1)
   const [imgIdx, setImgIdx] = useState(0)

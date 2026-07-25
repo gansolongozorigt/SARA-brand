@@ -1,11 +1,19 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Home from './pages/Home'
 import Checkout from './pages/Checkout'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import { useLivePrices } from './store/livePrices'
 
 function App() {
+  // Fetch live prices/stock once on load. Non-blocking: the static catalogue is
+  // already rendering; merged values update in place when this resolves.
+  useEffect(() => {
+    useLivePrices.getState().load()
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>

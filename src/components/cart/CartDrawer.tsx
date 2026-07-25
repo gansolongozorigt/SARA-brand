@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCart, selectSubtotal } from '../../store/cart'
+import { useCart } from '../../store/cart'
 import { PRODUCTS } from '../../data/products'
+import { useLivePrices, useLiveSubtotal } from '../../store/livePrices'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import Price from '../ui/Price'
 
@@ -15,7 +16,8 @@ export default function CartDrawer() {
   const items = useCart((s) => s.items)
   const setQty = useCart((s) => s.setQty)
   const removeItem = useCart((s) => s.removeItem)
-  const subtotal = useCart(selectSubtotal)
+  const overlays = useLivePrices((s) => s.overlays)
+  const subtotal = useLiveSubtotal(items)
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function CartDrawer() {
                       />
                       <div className="flex min-w-0 flex-1 flex-col">
                         <div className="cart-name font-serif text-[15px] leading-tight text-ink">{product.name[lang]}</div>
-                        <div className="mt-[2px] text-[13px] font-medium text-gold3"><Price amount={product.price} /></div>
+                        <div className="mt-[2px] text-[13px] font-medium text-gold3"><Price amount={overlays[it.id]?.price ?? product.price} /></div>
                         <div className="mt-auto flex items-center justify-between pt-[10px]">
                           {/* Quantity stepper — small square buttons, glyph centered, one row */}
                           <div className="inline-flex items-center rounded-full border border-line bg-paper">

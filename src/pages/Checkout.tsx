@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { cn } from '../lib/utils'
-import { useCart, selectSubtotal } from '../store/cart'
+import { useCart } from '../store/cart'
 import { PRODUCTS } from '../data/products'
+import { useLivePrices, useLiveSubtotal } from '../store/livePrices'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { submitOrder, type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -133,7 +134,8 @@ export default function Checkout() {
   const { lang } = useLang()
   const navigate = useNavigate()
   const items = useCart((s) => s.items)
-  const subtotal = useCart(selectSubtotal)
+  const overlays = useLivePrices((s) => s.overlays)
+  const subtotal = useLiveSubtotal(items)
   const clear = useCart((s) => s.clear)
 
   const [fullName, setFullName] = useState('')
@@ -153,9 +155,11 @@ export default function Checkout() {
   const rows = useMemo<SummaryRow[]>(() => {
     return items.flatMap((it) => {
       const p = PRODUCTS.find((x) => x.id === it.id)
-      return p ? [{ id: it.id, name: p.name[lang], qty: it.qty, lineTotal: p.price * it.qty }] : []
+      if (!p) return []
+      const price = overlays[it.id]?.price ?? p.price
+      return [{ id: it.id, name: p.name[lang], qty: it.qty, lineTotal: price * it.qty }]
     })
-  }, [items, lang])
+  }, [items, lang, overlays])
 
   function validate(): boolean {
     const e: Partial<Record<FieldKey, string>> = {}
@@ -193,9 +197,9 @@ export default function Checkout() {
       payment,
       items: items.flatMap<OrderItem>((it) => {
         const p = PRODUCTS.find((x) => x.id === it.id)
-        return p
-          ? [{ id: it.id, name: p.name[lang], qty: it.qty, unitPrice: p.price, lineTotal: p.price * it.qty }]
-          : []
+        if (!p) return []
+        const unitPrice = overlays[it.id]?.price ?? p.price
+        return [{ id: it.id, name: p.name[lang], qty: it.qty, unitPrice, lineTotal: unitPrice * it.qty }]
       }),
       total: subtotal,
       currencyLabel: lang === 'mn' ? '₮' : 'MNT',

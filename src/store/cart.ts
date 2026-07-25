@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { PRODUCTS } from '../data/products'
 
 export interface CartItem {
   id: string
@@ -52,9 +51,5 @@ export const useCart = create<CartState>()(
 /** Total number of items (summed quantity) — for the header badge. */
 export const selectCount = (s: CartState): number => s.items.reduce((n, i) => n + i.qty, 0)
 
-/** Subtotal in MNT — unit price looked up from PRODUCTS by id. */
-export const selectSubtotal = (s: CartState): number =>
-  s.items.reduce((sum, i) => {
-    const product = PRODUCTS.find((p) => p.id === i.id)
-    return sum + (product ? product.price * i.qty : 0)
-  }, 0)
+// Subtotal now lives in ../store/livePrices as `useLiveSubtotal(items)` so it can
+// merge live WooCommerce prices over the static catalogue (with static fallback).
