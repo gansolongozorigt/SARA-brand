@@ -4,7 +4,7 @@ import { HERO_PRODUCTS, MOODS } from '../../data/heroProducts'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import Price from '../ui/Price'
 import { useProductModal } from '../../store/productModal'
-import { useLivePrices } from '../../store/livePrices'
+import { useLivePrices, isSoldOut } from '../../store/livePrices'
 
 const AUTO_ADVANCE_MS = 4200
 
@@ -64,7 +64,11 @@ export default function Coverflow() {
               <div className="glow" />
               <div className="cf-cap">
                 <h4>{p.name[lang].split(' ').slice(0, 3).join(' ')}</h4>
-                <div className="pr"><Price amount={overlays[p.id]?.price ?? p.price} /></div>
+                {isSoldOut(overlays[p.id]?.stockStatus) ? (
+                  <div className="pr"><span className="soldout-badge">{t('soldOut')}</span></div>
+                ) : (
+                  <div className="pr"><Price amount={overlays[p.id]?.price ?? p.price} /></div>
+                )}
               </div>
             </div>
           )

@@ -7,7 +7,17 @@
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { PRODUCTS, type Product } from '../data/products'
-import { fetchLiveOverlays, type OverlayMap } from '../lib/wooPrices'
+import { fetchLiveOverlays, type OverlayMap, type WooStockStatus } from '../lib/wooPrices'
+
+/**
+ * Whether a live stock status should block purchase. Only an explicit
+ * "outofstock" blocks — "instock", "onbackorder", and missing/unknown (fetch
+ * failed or no Woo match) are all treated as available, so a data gap never
+ * blocks a sale.
+ */
+export function isSoldOut(status: WooStockStatus | undefined): boolean {
+  return status === 'outofstock'
+}
 
 type LoadStatus = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -71,7 +81,8 @@ export function useLiveProduct(id: string | null): Product | null {
 /**
  * Cart subtotal in MNT using live prices, reactive to BOTH the cart items and the
  * live overlays. Unit price falls back to the static price when a SKU has no
- * overlay. Kept here (next to the overlay logic) as the single subtotal source.
+ * overlay. Out-of-stock lines are excluded from the total (they can't be ordered
+ * until removed). Kept here as the single subtotal source.
  */
 export function useLiveSubtotal(items: { id: string; qty: number }[]): number {
   const overlays = useLivePrices((s) => s.overlays)
@@ -80,9 +91,19 @@ export function useLiveSubtotal(items: { id: string; qty: number }[]): number {
       items.reduce((sum, item) => {
         const product = PRODUCTS.find((p) => p.id === item.id)
         if (!product) return sum
+        if (isSoldOut(overlays[item.id]?.stockStatus)) return sum
         const price = overlays[item.id]?.price ?? product.price
         return sum + price * item.qty
       }, 0),
+    [items, overlays],
+  )
+}
+
+/** Reactive set of cart-item ids that are currently out of stock (live). */
+export function useOutOfStockIds(items: { id: string }[]): Set<string> {
+  const overlays = useLivePrices((s) => s.overlays)
+  return useMemo(
+    () => new Set(items.filter((i) => isSoldOut(overlays[i.id]?.stockStatus)).map((i) => i.id)),
     [items, overlays],
   )
 }

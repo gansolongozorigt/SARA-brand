@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { cn } from '../lib/utils'
 import { useCart } from '../store/cart'
 import { PRODUCTS } from '../data/products'
-import { useLivePrices, useLiveSubtotal } from '../store/livePrices'
+import { useLivePrices, useLiveSubtotal, useOutOfStockIds, isSoldOut } from '../store/livePrices'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { submitOrder, type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -21,6 +21,7 @@ interface SummaryRow {
   name: string
   qty: number
   lineTotal: number
+  unavailable: boolean
 }
 
 type FieldKey = 'fullName' | 'phone' | 'city' | 'address' | 'email'
@@ -52,7 +53,11 @@ function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
                   {t('coQty')}: {r.qty}
                 </div>
               </div>
-              <div className="shrink-0 text-[13px] font-medium text-gold3">{fmt(r.lineTotal)}</div>
+              {r.unavailable ? (
+                <div className="shrink-0 text-[12px] text-muted">{t('cartUnavailable')}</div>
+              ) : (
+                <div className="shrink-0 text-[13px] font-medium text-gold3">{fmt(r.lineTotal)}</div>
+              )}
             </li>
           )
         })}
@@ -136,6 +141,7 @@ export default function Checkout() {
   const items = useCart((s) => s.items)
   const overlays = useLivePrices((s) => s.overlays)
   const subtotal = useLiveSubtotal(items)
+  const outOfStock = useOutOfStockIds(items)
   const clear = useCart((s) => s.clear)
 
   const [fullName, setFullName] = useState('')
@@ -157,7 +163,8 @@ export default function Checkout() {
       const p = PRODUCTS.find((x) => x.id === it.id)
       if (!p) return []
       const price = overlays[it.id]?.price ?? p.price
-      return [{ id: it.id, name: p.name[lang], qty: it.qty, lineTotal: price * it.qty }]
+      const unavailable = isSoldOut(overlays[it.id]?.stockStatus)
+      return [{ id: it.id, name: p.name[lang], qty: it.qty, lineTotal: price * it.qty, unavailable }]
     })
   }, [items, lang, overlays])
 
@@ -182,6 +189,12 @@ export default function Checkout() {
   async function handlePlaceOrder() {
     if (submitting) return
     if (!validate()) return
+    // Defensive re-check: an out-of-stock item can never be ordered, even if it
+    // slipped through the cart (e.g. stock changed while the tab was open).
+    if (outOfStock.size > 0) {
+      setSubmitError(t('cartUnavailable'))
+      return
+    }
     setSubmitError(null)
     setSubmitting(true)
 
@@ -224,6 +237,7 @@ export default function Checkout() {
       name: it.name,
       qty: it.qty,
       lineTotal: it.lineTotal,
+      unavailable: false, // a placed order only ever contains available items
     }))
     return (
       <section className="checkout mx-auto w-full max-w-[760px] px-[24px] pb-[90px] pt-[52px]">
@@ -358,13 +372,18 @@ export default function Checkout() {
           {/* Premium loading shimmer while submitting */}
           {submitting && <div className="co-skel mt-[14px] h-[5px] w-full rounded-full" />}
 
+          {outOfStock.size > 0 && (
+            <div className="mt-[14px] text-center text-[12.5px] text-muted">{t('cartUnavailable')}</div>
+          )}
+
           <button
             type="button"
             onClick={handlePlaceOrder}
-            disabled={submitting}
+            disabled={submitting || outOfStock.size > 0}
             className={cn(
               'gold-bg mt-[14px] flex w-full items-center justify-center gap-[10px] rounded-full py-[15px] text-[13px] font-semibold uppercase tracking-[0.08em] text-[#241c08] transition-transform duration-200',
               submitting ? 'cursor-wait opacity-90' : 'hover:-translate-y-[1px]',
+              outOfStock.size > 0 && 'cursor-not-allowed opacity-45 hover:translate-y-0',
             )}
           >
             {submitting ? (

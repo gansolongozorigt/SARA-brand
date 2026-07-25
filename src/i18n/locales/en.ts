@@ -32,6 +32,8 @@ export const en: Record<TranslationKey, string> = {
   checkout: "Checkout",
   emptyCart: "Your cart is empty",
   remove: "Remove",
+  soldOut: "Sold out",
+  cartUnavailable: "This item is temporarily sold out",
   footAbout: "A naturally derived beauty brand created by a Mongolian woman. Love your skin.",
   footExplore: "Explore",
   footContact: "Contact",

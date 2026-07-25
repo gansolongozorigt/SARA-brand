@@ -820,3 +820,30 @@ html[lang="mn"] .sheet .info .stagline {
   animation: co-shimmer 1.2s infinite;
 }
 @keyframes co-shimmer { to { transform: translateX(100%); } }
+
+/* ===== out-of-stock: restrained, muted treatment — reuses the brand palette,
+   no loud alert. Charcoal pill (as .atc) + soft beige text (as .tag). ===== */
+.soldout-badge {
+  display: inline-block;
+  background: #26241f;
+  color: #eadfca;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 30px;
+}
+/* Card: badge pinned top-right of the image (tag stays top-left); image calmed. */
+.card .soldout-badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
+.card.soldout .ph img { filter: grayscale(0.4) opacity(0.72); }
+/* Disabled add-to-cart — muted beige, clearly inert (also disabled + guarded in JS). */
+.atc.is-disabled,
+.card .quick.is-disabled {
+  background: #e7ddc9;
+  color: #a99f8b;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.atc.is-disabled:hover,
+.card .quick.is-disabled:hover { background: #e7ddc9; }

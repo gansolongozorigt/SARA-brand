@@ -32,6 +32,8 @@ export const cn: Record<TranslationKey, string> = {
   checkout: "结算",
   emptyCart: "购物车是空的",
   remove: "移除",
+  soldOut: "已售罄",
+  cartUnavailable: "该商品暂时售罄",
   footAbout: "由蒙古女性创立的天然美妆品牌。呵护您的肌肤。",
   footExplore: "探索",
   footContact: "联系",

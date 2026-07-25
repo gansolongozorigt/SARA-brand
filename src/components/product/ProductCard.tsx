@@ -4,6 +4,7 @@ import { type Product } from '../../data/products'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import Price from '../ui/Price'
 import { useCart } from '../../store/cart'
+import { isSoldOut } from '../../store/livePrices'
 import { useProductModal } from '../../store/productModal'
 
 interface ProductCardProps {
@@ -17,10 +18,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const openModal = useProductModal((s) => s.open)
   const [added, setAdded] = useState(false)
   const timer = useRef<number | null>(null)
+  const soldOut = isSoldOut(product.stockStatus)
 
   // Add to the cart + play the "Added" morph (does not open the drawer).
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (soldOut) return
     addItem(product.id)
     setAdded(true)
     if (timer.current !== null) window.clearTimeout(timer.current)
@@ -30,9 +33,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const open = () => openModal(product.id)
 
   return (
-    <div className="card">
+    <div className={cn('card', soldOut && 'soldout')}>
       <div className="ph" onClick={open}>
         <span className="tag">{product.tag[lang]}</span>
+        {soldOut && <span className="soldout-badge">{t('soldOut')}</span>}
         <img src={product.images[0]} alt={product.name[lang]} loading="lazy" decoding="async" />
       </div>
       <div className="body">
@@ -42,7 +46,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="price"><Price amount={product.price} /></span>
           {product.old != null && <span className="old"><Price amount={product.old} /></span>}
         </div>
-        <button type="button" className={cn('atc quick', added && 'added')} onClick={handleAdd}>
+        <button
+          type="button"
+          className={cn('atc quick', added && 'added', soldOut && 'is-disabled')}
+          onClick={handleAdd}
+          disabled={soldOut}
+          aria-disabled={soldOut}
+        >
           <span className="cartfly">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={1.7}>
               <path d="M6 6h15l-1.5 9h-12z" />
