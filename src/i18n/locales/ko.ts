@@ -35,6 +35,8 @@ export const ko: Record<TranslationKey, string> = {
   checkout: "주문하기",
   emptyCart: "장바구니가 비어 있습니다",
   remove: "삭제",
+  soldOut: "품절",
+  cartUnavailable: "이 상품은 일시 품절입니다",
   footAbout: "몽골 여성이 만든 자연 유래 뷰티 브랜드. 당신의 피부를 사랑하세요.",
   footExplore: "둘러보기",
   footContact: "문의",

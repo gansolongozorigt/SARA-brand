@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../store/cart'
 import { PRODUCTS } from '../../data/products'
-import { useLivePrices, useLiveSubtotal } from '../../store/livePrices'
+import { useLivePrices, useLiveSubtotal, useOutOfStockIds } from '../../store/livePrices'
 import { useLang, useT } from '../../i18n/LanguageContext'
+import { cn } from '../../lib/utils'
 import Price from '../ui/Price'
 
 export default function CartDrawer() {
@@ -18,6 +19,7 @@ export default function CartDrawer() {
   const removeItem = useCart((s) => s.removeItem)
   const overlays = useLivePrices((s) => s.overlays)
   const subtotal = useLiveSubtotal(items)
+  const outOfStock = useOutOfStockIds(items)
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -83,16 +85,21 @@ export default function CartDrawer() {
                 items.map((it) => {
                   const product = PRODUCTS.find((p) => p.id === it.id)
                   if (!product) return null
+                  const unavailable = outOfStock.has(it.id)
                   return (
                     <div key={it.id} className="flex gap-[14px] border-b border-line py-[16px]">
                       <img
                         src={product.images[0]}
                         alt={product.name[lang]}
-                        className="h-[76px] w-[64px] shrink-0 rounded-[10px] object-cover"
+                        className={cn('h-[76px] w-[64px] shrink-0 rounded-[10px] object-cover', unavailable && 'opacity-60 grayscale')}
                       />
                       <div className="flex min-w-0 flex-1 flex-col">
                         <div className="cart-name font-serif text-[15px] leading-tight text-ink">{product.name[lang]}</div>
-                        <div className="mt-[2px] text-[13px] font-medium text-gold3"><Price amount={overlays[it.id]?.price ?? product.price} /></div>
+                        {unavailable ? (
+                          <div className="mt-[2px] text-[12px] text-muted">{t('cartUnavailable')}</div>
+                        ) : (
+                          <div className="mt-[2px] text-[13px] font-medium text-gold3"><Price amount={overlays[it.id]?.price ?? product.price} /></div>
+                        )}
                         <div className="mt-auto flex items-center justify-between pt-[10px]">
                           {/* Quantity stepper — small square buttons, glyph centered, one row */}
                           <div className="inline-flex items-center rounded-full border border-line bg-paper">
@@ -138,14 +145,16 @@ export default function CartDrawer() {
                   <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('subtotal')}</span>
                   <span className="font-serif text-[20px] font-semibold text-ink"><Price amount={subtotal} /></span>
                 </div>
-                {/* Checkout — close the drawer and go to the checkout route */}
+                {/* Checkout — blocked while any line is out of stock (must be removed first) */}
                 <button
                   type="button"
+                  disabled={outOfStock.size > 0}
                   onClick={() => {
+                    if (outOfStock.size > 0) return
                     closeCart()
                     navigate('/checkout')
                   }}
-                  className="gold-bg w-full rounded-full py-[13px] text-[13px] font-semibold uppercase tracking-[0.06em] text-[#241c08] transition-transform duration-200 hover:-translate-y-[1px]"
+                  className="gold-bg w-full rounded-full py-[13px] text-[13px] font-semibold uppercase tracking-[0.06em] text-[#241c08] transition-transform duration-200 hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
                 >
                   {t('checkout')}
                 </button>

@@ -32,6 +32,8 @@ export const ru: Record<TranslationKey, string> = {
   checkout: "Оформить заказ",
   emptyCart: "Ваша корзина пуста",
   remove: "Удалить",
+  soldOut: "Нет в наличии",
+  cartUnavailable: "Этот товар временно распродан",
   footAbout: "Натуральный бренд красоты, созданный монгольской женщиной. Любите свою кожу.",
   footExplore: "Навигация",
   footContact: "Контакты",

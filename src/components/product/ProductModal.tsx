@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
-import { useLiveProduct } from '../../store/livePrices'
+import { useLiveProduct, isSoldOut } from '../../store/livePrices'
 import { useProductModal } from '../../store/productModal'
 import { useCart } from '../../store/cart'
 import { useLang, useT } from '../../i18n/LanguageContext'
@@ -15,6 +15,7 @@ export default function ProductModal() {
   const addItem = useCart((s) => s.addItem)
 
   const product = useLiveProduct(productId)
+  const soldOut = product ? isSoldOut(product.stockStatus) : false
 
   const [qty, setQty] = useState(1)
   const [imgIdx, setImgIdx] = useState(0)
@@ -43,7 +44,7 @@ export default function ProductModal() {
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!product) return
+    if (!product || soldOut) return
     addItem(product.id, qty)
     setAdded(true)
     if (timer.current !== null) window.clearTimeout(timer.current)
@@ -149,6 +150,7 @@ export default function ProductModal() {
                 <div className="pricebig">
                   <span className="p"><Price amount={product.price} /></span>
                   {product.old != null && <span className="o"><Price amount={product.old} /></span>}
+                  {soldOut && <span className="soldout-badge">{t('soldOut')}</span>}
                 </div>
                 <div className="qty">
                   <button type="button" aria-label="decrease quantity" onClick={() => setQty((q) => Math.max(1, q - 1))}>
@@ -162,7 +164,13 @@ export default function ProductModal() {
               </div>
 
               <div className="mt-[16px]">
-                <button type="button" className={cn('atc', added && 'added')} onClick={handleAdd}>
+                <button
+                  type="button"
+                  className={cn('atc', added && 'added', soldOut && 'is-disabled')}
+                  onClick={handleAdd}
+                  disabled={soldOut}
+                  aria-disabled={soldOut}
+                >
                   <span className="cartfly">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={1.7}>
                       <path d="M6 6h15l-1.5 9h-12z" />
