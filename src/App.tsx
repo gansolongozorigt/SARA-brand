@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Checkout from './pages/Checkout'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import AdminResellers from './pages/AdminResellers'
 import { useLivePrices } from './store/livePrices'
 import { useAuth } from './store/auth'
 
@@ -26,6 +27,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
+        {/* Internal admin tool — standalone, unlinked, server-gated. */}
+        <Route path="/admin" element={<AdminResellers />} />
       </Routes>
     </BrowserRouter>
   )

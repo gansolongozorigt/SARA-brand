@@ -146,8 +146,28 @@ export default function Header() {
                 The empty tier-slot is reserved for the tier badge in a later phase. */}
             {authUser && (
               <div className="flex items-center gap-[10px] max-[680px]:gap-[8px]">
-                {/* tier badge placeholder (Phase A2) — intentionally empty for now */}
-                <span data-tier-slot aria-hidden="true" />
+                {/* Reseller tier badge (Phase A2) — status from auth-me, restrained styling. */}
+                {(() => {
+                  const r = authUser.reseller
+                  const text =
+                    r.status === 'active' && r.tier != null && r.expiry
+                      ? t('badgeActive')
+                          .replace('{tier}', String(r.tier))
+                          .replace('{date}', r.expiry.slice(0, 7).replace('-', '.'))
+                      : r.status === 'expired'
+                        ? t('badgeExpired')
+                        : t('badgeNone')
+                  return (
+                    <span
+                      className={cn(
+                        'max-w-[280px] truncate text-[11px] tracking-[0.02em] max-[1120px]:hidden',
+                        r.status === 'active' ? 'text-gold3' : 'text-muted',
+                      )}
+                    >
+                      {text}
+                    </span>
+                  )
+                })()}
                 <span
                   className="max-w-[140px] truncate text-[12px] tracking-[0.02em] text-gold3 max-[860px]:hidden"
                   title={authUser.email}
