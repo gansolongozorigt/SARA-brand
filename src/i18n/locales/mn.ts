@@ -38,6 +38,8 @@ export const mn = {
   footHours: "Даваа–Бямба · 10:00–19:00",
   footRights: "Бүх эрх хуулиар хамгаалагдсан.",
   footMade: "Монголд ❤ зүрх сэтгэлээр бүтээв",
+  resellerLogin: "Борлуулагчийн нэвтрэлт",
+  resellerLogout: "Гарах",
   prodAll: "Бүгд",
   catSkin: "Арьс арчилгаа",
   catBody: "Бие арчилгаа",

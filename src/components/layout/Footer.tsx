@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
+import { useAuth } from '../../store/auth'
 
 const EXPLORE: { key: TranslationKey; to: string }[] = [
   { key: 'navProducts', to: '/' },
@@ -10,6 +11,7 @@ const EXPLORE: { key: TranslationKey; to: string }[] = [
 
 export default function Footer() {
   const t = useT()
+  const user = useAuth((s) => s.user)
   return (
     <footer className="bg-ink px-[26px] pb-[28px] pt-[54px] text-[#cfc6b4] max-[680px]:px-[22px] max-[680px]:pb-[24px] max-[680px]:pt-[40px]">
       <div className="mx-auto grid max-w-[1240px] grid-cols-[1.4fr_1fr_1fr] gap-[34px] max-[980px]:grid-cols-2 max-[680px]:grid-cols-1 max-[680px]:gap-[24px]">
@@ -62,6 +64,16 @@ export default function Footer() {
           © 2026 SARA. <span>{t('footRights')}</span>
         </span>
         <span>{t('footMade')}</span>
+        {/* Discreet reseller sign-in (Phase A1) — full-page nav to the server OAuth
+            start. Hidden once signed in; the header then shows the indicator. */}
+        {!user && (
+          <a
+            href="/api/auth-login"
+            className="text-[#8a8270] underline-offset-2 transition-colors duration-[250ms] hover:text-[#cfc6b4] hover:underline"
+          >
+            {t('resellerLogin')}
+          </a>
+        )}
       </div>
     </footer>
   )

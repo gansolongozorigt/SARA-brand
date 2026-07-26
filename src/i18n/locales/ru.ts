@@ -40,6 +40,8 @@ export const ru: Record<TranslationKey, string> = {
   footHours: "Пн–Сб · 10:00–19:00",
   footRights: "Все права защищены.",
   footMade: "Сделано с ❤ в Монголии",
+  resellerLogin: "Вход для дилеров",
+  resellerLogout: "Выйти",
   prodAll: "Все",
   catSkin: "Уход за кожей",
   catBody: "Уход за телом",
