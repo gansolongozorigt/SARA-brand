@@ -6,12 +6,15 @@ import Checkout from './pages/Checkout'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import { useLivePrices } from './store/livePrices'
+import { useAuth } from './store/auth'
 
 function App() {
   // Fetch live prices/stock once on load. Non-blocking: the static catalogue is
   // already rendering; merged values update in place when this resolves.
   useEffect(() => {
     useLivePrices.getState().load()
+    // Reflect any existing reseller session (identity only; storefront unchanged).
+    useAuth.getState().fetchMe()
   }, [])
 
   return (

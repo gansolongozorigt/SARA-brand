@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
 import { useCart, selectCount } from '../../store/cart'
+import { useAuth } from '../../store/auth'
 import LanguageSwitcher from './LanguageSwitcher'
 
 // Products scrolls to the home shop section; About/Contact are their own routes.
@@ -25,6 +26,7 @@ export default function Header() {
   const location = useLocation()
   const cartCount = useCart(selectCount)
   const openCart = useCart((s) => s.openCart)
+  const authUser = useAuth((s) => s.user)
 
   const [scrolled, setScrolled] = useState(false)
   const [activeNav, setActiveNav] = useState<string>('products')
@@ -139,6 +141,27 @@ export default function Header() {
           <div className="flex items-center gap-[14px] max-[680px]:gap-[10px]">
             {/* Language switcher (compact code button + dropdown) */}
             <LanguageSwitcher />
+
+            {/* Reseller indicator — only when signed in. Guests see nothing here.
+                The empty tier-slot is reserved for the tier badge in a later phase. */}
+            {authUser && (
+              <div className="flex items-center gap-[10px] max-[680px]:gap-[8px]">
+                {/* tier badge placeholder (Phase A2) — intentionally empty for now */}
+                <span data-tier-slot aria-hidden="true" />
+                <span
+                  className="max-w-[140px] truncate text-[12px] tracking-[0.02em] text-gold3 max-[860px]:hidden"
+                  title={authUser.email}
+                >
+                  {authUser.name || authUser.email}
+                </span>
+                <a
+                  href="/api/auth-logout"
+                  className="text-[12px] uppercase tracking-[0.08em] text-muted underline-offset-2 transition-colors duration-200 hover:text-gold3 hover:underline"
+                >
+                  {t('resellerLogout')}
+                </a>
+              </div>
+            )}
 
             {/* Account (logged-out: icon only) — hidden until accounts ship */}
             {ENABLE_ACCOUNTS && (

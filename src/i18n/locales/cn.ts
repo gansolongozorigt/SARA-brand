@@ -40,6 +40,8 @@ export const cn: Record<TranslationKey, string> = {
   footHours: "周一至周六 · 10:00–19:00",
   footRights: "版权所有。",
   footMade: "用 ❤ 制作于蒙古",
+  resellerLogin: "经销商登录",
+  resellerLogout: "退出",
   prodAll: "全部",
   catSkin: "护肤",
   catBody: "身体护理",

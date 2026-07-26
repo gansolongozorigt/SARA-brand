@@ -43,6 +43,8 @@ export const ko: Record<TranslationKey, string> = {
   footHours: "월–토 · 10:00–19:00",
   footRights: "모든 권리 보유.",
   footMade: "몽골에서 ❤을 담아 만들었습니다",
+  resellerLogin: "리셀러 로그인",
+  resellerLogout: "로그아웃",
   prodAll: "전체",
   catSkin: "스킨케어",
   // "바디케어" is the standard K-beauty term for body care. TODO(human-review): confirm preferred spacing ("바디 케어") if desired.
