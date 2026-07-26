@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { readSession } from './_authServer'
+import { readSession } from './_authServer.js'
 
 /**
  * Return the current reseller identity as JSON: { email, name, picture } or null.

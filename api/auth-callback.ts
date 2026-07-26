@@ -10,7 +10,7 @@ import {
   exchangeCode,
   verifyGoogleIdToken,
   createSessionCookie,
-} from './_authServer'
+} from './_authServer.js'
 
 /**
  * OAuth redirect target. Verifies state, exchanges the code for tokens
