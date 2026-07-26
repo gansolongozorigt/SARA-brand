@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getOrigin, clearSessionCookie } from '../lib/authServer'
+import { getOrigin, clearSessionCookie } from './_authServer'
 
 /** Clear the session cookie and redirect home. */
 export default function handler(req: VercelRequest, res: VercelResponse) {

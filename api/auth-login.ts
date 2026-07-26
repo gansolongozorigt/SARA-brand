@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireEnv, getOrigin, redirectUri, createState, stateCookie, googleAuthUrl } from '../lib/authServer'
+import { requireEnv, getOrigin, redirectUri, createState, stateCookie, googleAuthUrl } from './_authServer'
 
 /**
  * Start the Google OAuth authorization-code flow. Generates a random state,
