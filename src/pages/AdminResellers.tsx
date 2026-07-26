@@ -18,6 +18,19 @@ type Access = 'loading' | 'admin' | 'denied' | 'error'
 const inputCls =
   'w-full rounded-[10px] border border-line bg-paper px-[12px] py-[9px] text-[14px] text-ink outline-none focus:border-gold3'
 
+// Client-side status for optimistic updates only (Edge Config writes take up to
+// 10s to propagate to the read endpoint, so we don't re-fetch right after a save).
+// The server remains authoritative on the next page load. Mirrors the UB logic.
+function clientStatus(expiry: string): 'active' | 'expired' {
+  const todayUB = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ulaanbaatar',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+  return expiry >= todayUB ? 'active' : 'expired'
+}
+
 export default function AdminResellers() {
   const t = useT()
   const [access, setAccess] = useState<Access>('loading')
@@ -85,8 +98,11 @@ export default function AdminResellers() {
       if (!res.ok) {
         setErr(t('adminError'))
       } else {
+        // Optimistic upsert from the write response (avoids read-propagation lag).
+        const rec = (await res.json()).reseller as { email: string; tier: number; expiry: string; note?: string }
+        const row: Row = { email: rec.email, tier: rec.tier, expiry: rec.expiry, note: rec.note, status: clientStatus(rec.expiry) }
+        setRows((prev) => [...prev.filter((r) => r.email !== row.email), row].sort((a, b) => a.email.localeCompare(b.email)))
         resetForm()
-        await load()
       }
     } catch {
       setErr(t('adminError'))
@@ -106,8 +122,8 @@ export default function AdminResellers() {
         body: JSON.stringify({ email: target }),
       })
       if (res.ok) {
+        setRows((prev) => prev.filter((r) => r.email !== target)) // optimistic
         if (editing && email === target) resetForm()
-        await load()
       } else {
         setErr(t('adminError'))
       }
