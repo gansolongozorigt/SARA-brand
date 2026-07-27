@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!storageConfigured()) {
     console.error('[admin-resellers] storage credentials not set')
-    return res.status(503).json({ error: 'Storage not configured' })
+    return res.status(500).json({ error: 'Server misconfiguration' })
   }
 
   try {

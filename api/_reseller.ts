@@ -113,26 +113,43 @@ export function isAdminEmail(email: string | undefined | null): boolean {
 
 // ----- Edge Config storage -----
 
-// The Vercel Upstash integration injects UPSTASH_REDIS_REST_*; some setups use the
-// KV_REST_API_* aliases. Accept either so provisioning "just works".
-function upstashCreds(): { url: string; token: string } {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
-  if (!url || !token) throw new Error('Upstash Redis credentials not set')
-  return { url, token }
+// The Vercel Upstash Marketplace integration injects KV_REST_API_* (with a
+// dedicated read-only token). Prefer those; fall back to UPSTASH_REDIS_REST_* in
+// case the naming ever changes. Least privilege: read paths use the read-only
+// token, writes use the full token.
+function restUrl(): string {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  if (!url) throw new Error('Redis REST URL not set')
+  return url
+}
+
+function readOnlyToken(): string {
+  const t =
+    process.env.KV_REST_API_READ_ONLY_TOKEN ||
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!t) throw new Error('Redis read token not set')
+  return t
+}
+
+function fullToken(): string {
+  const t = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!t) throw new Error('Redis write token not set')
+  return t
 }
 
 export function storageConfigured(): boolean {
-  return !!(
-    (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
-    (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN)
-  )
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  const anyToken =
+    process.env.KV_REST_API_READ_ONLY_TOKEN ||
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  return !!(url && anyToken)
 }
 
-/** Run a single Upstash REST command (["GET", key] / ["SET", key, value]). */
-async function redisCommand(command: (string | number)[]): Promise<unknown> {
-  const { url, token } = upstashCreds()
-  const res = await fetch(url, {
+/** Run one Upstash REST command with the given token (least-privilege by caller). */
+async function redisCommand(command: (string | number)[], token: string): Promise<unknown> {
+  const res = await fetch(restUrl(), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(command),
@@ -143,9 +160,9 @@ async function redisCommand(command: (string | number)[]): Promise<unknown> {
   return data.result
 }
 
-/** Read the whole registry (email -> record). Empty object if unset/absent. */
+/** Read the whole registry (email -> record). Empty object if unset/absent. Read-only token. */
 export async function readResellers(): Promise<ResellerMap> {
-  const raw = await redisCommand(['GET', REGISTRY_KEY])
+  const raw = await redisCommand(['GET', REGISTRY_KEY], readOnlyToken())
   if (typeof raw !== 'string' || raw === '') return {}
   try {
     const value = JSON.parse(raw) as ResellerMap
@@ -161,9 +178,9 @@ export async function readReseller(email: string): Promise<ResellerRecord | unde
   return all[email]
 }
 
-/** Overwrite the whole registry (rare write path). */
+/** Overwrite the whole registry (rare write path). Full (write) token. */
 async function writeResellers(map: ResellerMap): Promise<void> {
-  await redisCommand(['SET', REGISTRY_KEY, JSON.stringify(map)])
+  await redisCommand(['SET', REGISTRY_KEY, JSON.stringify(map)], fullToken())
 }
 
 /** Create or update one reseller. Returns the stored record. */
