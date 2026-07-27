@@ -107,7 +107,12 @@ export default function Header() {
 
           {/* Center nav links — absolutely centered relative to the page */}
           <nav
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-[6px] max-[680px]:hidden"
+            className={cn(
+              'absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 gap-[6px] max-[680px]:hidden',
+              // Signed-in header is busier (name + logout); switch to the burger
+              // earlier so the centered nav never collides with the right tools.
+              authUser && 'max-[900px]:hidden',
+            )}
             onMouseLeave={() => movePill(activeNav)}
           >
             <span
@@ -142,14 +147,13 @@ export default function Header() {
             {/* Language switcher (compact code button + dropdown) */}
             <LanguageSwitcher />
 
-            {/* Reseller indicator — only when signed in. Guests see nothing here.
-                The empty tier-slot is reserved for the tier badge in a later phase. */}
+            {/* Signed-in identity — name + logout only. The reseller tier badge lives
+                in its own slim bar below the header (see below) so this row stays
+                compact and never collides with the centered nav. Guests see nothing. */}
             {authUser && (
               <div className="flex items-center gap-[10px] max-[680px]:gap-[8px]">
-                {/* tier badge placeholder (Phase A2) — intentionally empty for now */}
-                <span data-tier-slot aria-hidden="true" />
                 <span
-                  className="max-w-[140px] truncate text-[12px] tracking-[0.02em] text-gold3 max-[860px]:hidden"
+                  className="max-w-[150px] truncate text-[12px] tracking-[0.02em] text-gold3 max-[1160px]:hidden"
                   title={authUser.email}
                 >
                   {authUser.name || authUser.email}
@@ -189,7 +193,7 @@ export default function Header() {
               type="button"
               aria-label="menu"
               onClick={() => setMobOpen((o) => !o)}
-              className="hidden w-[30px] flex-col gap-[5px] max-[680px]:flex"
+              className={cn('hidden w-[30px] flex-col gap-[5px] max-[680px]:flex', authUser && 'max-[900px]:flex')}
             >
               <span className="h-[2px] rounded-[2px] bg-gold3 transition-all duration-300" />
               <span className="h-[2px] rounded-[2px] bg-gold3 transition-all duration-300" />
@@ -198,6 +202,37 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      {/* Reseller status bar — slim, quiet, full-width, only when signed in.
+          Sits directly below the sticky header (scrolls away on scroll). Keeps the
+          long tier text out of the main header row so nothing collides. */}
+      {authUser && (
+        <div className="w-full border-b border-line bg-cream/80 backdrop-blur-[6px]">
+          <div className="mx-auto max-w-[1240px] px-[26px] py-[6px] max-[680px]:px-[18px]">
+            {(() => {
+              const r = authUser.reseller
+              const text =
+                r.status === 'active' && r.tier != null && r.expiry
+                  ? t('badgeActive')
+                      .replace('{tier}', String(r.tier))
+                      .replace('{date}', r.expiry.slice(0, 7).replace('-', '.'))
+                  : r.status === 'expired'
+                    ? t('badgeExpired')
+                    : t('badgeNone')
+              return (
+                <p
+                  className={cn(
+                    'truncate text-center text-[11px] tracking-[0.04em] max-[400px]:text-[10px]',
+                    r.status === 'active' ? 'text-gold3' : 'text-muted',
+                  )}
+                >
+                  {text}
+                </p>
+              )
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Fullscreen mobile nav */}
       <div

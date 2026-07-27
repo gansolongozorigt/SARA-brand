@@ -6,10 +6,20 @@
 
 import { create } from 'zustand'
 
+export type ResellerStatus = 'none' | 'active' | 'expired'
+
+export interface ResellerSelf {
+  status: ResellerStatus
+  tier: number | null
+  expiry: string | null // 'YYYY-MM-DD'
+}
+
 export interface AuthUser {
   email: string
   name: string
   picture: string
+  isAdmin: boolean
+  reseller: ResellerSelf
 }
 
 interface AuthState {
@@ -30,8 +40,19 @@ export const useAuth = create<AuthState>((set, get) => ({
         headers: { Accept: 'application/json' },
         credentials: 'same-origin',
       })
-      const user = (res.ok ? await res.json() : null) as AuthUser | null
-      set({ user: user ?? null, status: 'ready' })
+      const raw = (res.ok ? await res.json() : null) as Partial<AuthUser> | null
+      // Normalize so downstream UI always has isAdmin + reseller present.
+      const user: AuthUser | null =
+        raw && raw.email
+          ? {
+              email: raw.email,
+              name: raw.name ?? '',
+              picture: raw.picture ?? '',
+              isAdmin: raw.isAdmin ?? false,
+              reseller: raw.reseller ?? { status: 'none', tier: null, expiry: null },
+            }
+          : null
+      set({ user, status: 'ready' })
     } catch {
       set({ user: null, status: 'ready' })
     }
