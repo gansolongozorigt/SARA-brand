@@ -36,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!storageConfigured()) {
-    console.error('[admin-resellers] EDGE_CONFIG not set')
+    console.error('[admin-resellers] storage credentials not set')
     return res.status(503).json({ error: 'Storage not configured' })
   }
 

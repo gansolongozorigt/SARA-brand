@@ -1,6 +1,7 @@
-// Server-only reseller registry (Phase A2). Storage = Vercel Edge Config
-// (free on Hobby, PII stays in Vercel). Reads use the read-only connection
-// string; the rare writes go through the Vercel REST API with an API token.
+// Server-only reseller registry (Phase A2). Storage = Upstash Redis (Vercel
+// Marketplace). Free tier, no card, and its REST token is scoped to THIS single
+// database — nothing beyond the registry store is reachable with that credential.
+// The storage layer is isolated to the section at the bottom so it stays swappable.
 //
 // Lives in api/ with a leading underscore so Vercel does not route it, and is
 // imported with an explicit .js extension (ESM). Never imported by any src/ file.
@@ -25,7 +26,7 @@ export interface ResellerRecord {
 /** email(lowercased) -> record */
 type ResellerMap = Record<string, ResellerRecord>
 
-const EDGE_ITEM_KEY = 'resellers'
+const REGISTRY_KEY = 'resellers'
 const UB_TIMEZONE = 'Asia/Ulaanbaatar' // UTC+8, no DST
 
 // ----- discount (single source of truth; phase B will consume this) -----
@@ -112,30 +113,46 @@ export function isAdminEmail(email: string | undefined | null): boolean {
 
 // ----- Edge Config storage -----
 
-export function storageConfigured(): boolean {
-  return !!process.env.EDGE_CONFIG
+// The Vercel Upstash integration injects UPSTASH_REDIS_REST_*; some setups use the
+// KV_REST_API_* aliases. Accept either so provisioning "just works".
+function upstashCreds(): { url: string; token: string } {
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+  if (!url || !token) throw new Error('Upstash Redis credentials not set')
+  return { url, token }
 }
 
-function edgeConnection(): { base: string; token: string; id: string } {
-  const conn = process.env.EDGE_CONFIG
-  if (!conn) throw new Error('EDGE_CONFIG not set')
-  const u = new URL(conn) // https://edge-config.vercel.com/ecfg_xxx?token=yyy
-  const token = u.searchParams.get('token')
-  if (!token) throw new Error('EDGE_CONFIG missing token')
-  const id = u.pathname.replace(/^\/+/, '')
-  return { base: `${u.origin}/${id}`, token, id }
+export function storageConfigured(): boolean {
+  return !!(
+    (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) &&
+    (process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN)
+  )
+}
+
+/** Run a single Upstash REST command (["GET", key] / ["SET", key, value]). */
+async function redisCommand(command: (string | number)[]): Promise<unknown> {
+  const { url, token } = upstashCreds()
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(command),
+  })
+  if (!res.ok) throw new Error(`upstash ${res.status}`)
+  const data = (await res.json()) as { result?: unknown; error?: string }
+  if (data.error) throw new Error('upstash command error')
+  return data.result
 }
 
 /** Read the whole registry (email -> record). Empty object if unset/absent. */
 export async function readResellers(): Promise<ResellerMap> {
-  const { base, token } = edgeConnection()
-  const res = await fetch(`${base}/item/${EDGE_ITEM_KEY}?token=${encodeURIComponent(token)}`, {
-    headers: { Accept: 'application/json' },
-  })
-  if (res.status === 404) return {} // item not created yet
-  if (!res.ok) throw new Error(`edge-config read ${res.status}`)
-  const value = (await res.json()) as ResellerMap | null
-  return value && typeof value === 'object' ? value : {}
+  const raw = await redisCommand(['GET', REGISTRY_KEY])
+  if (typeof raw !== 'string' || raw === '') return {}
+  try {
+    const value = JSON.parse(raw) as ResellerMap
+    return value && typeof value === 'object' ? value : {}
+  } catch {
+    return {}
+  }
 }
 
 /** Look up a single reseller by (already-normalized) email. */
@@ -144,19 +161,9 @@ export async function readReseller(email: string): Promise<ResellerRecord | unde
   return all[email]
 }
 
-/** Overwrite the whole registry via the Vercel REST API (rare write path). */
+/** Overwrite the whole registry (rare write path). */
 async function writeResellers(map: ResellerMap): Promise<void> {
-  const token = process.env.VERCEL_API_TOKEN
-  const teamId = process.env.VERCEL_TEAM_ID
-  if (!token) throw new Error('VERCEL_API_TOKEN not set')
-  const { id } = edgeConnection()
-  const url = `https://api.vercel.com/v1/edge-config/${id}/items${teamId ? `?teamId=${teamId}` : ''}`
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: [{ operation: 'upsert', key: EDGE_ITEM_KEY, value: map }] }),
-  })
-  if (!res.ok) throw new Error(`edge-config write ${res.status}`)
+  await redisCommand(['SET', REGISTRY_KEY, JSON.stringify(map)])
 }
 
 /** Create or update one reseller. Returns the stored record. */
