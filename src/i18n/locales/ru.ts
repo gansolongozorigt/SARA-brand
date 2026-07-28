@@ -67,6 +67,8 @@ export const ru: Record<TranslationKey, string> = {
   adminLoading: "Загрузка…",
   adminError: "Произошла ошибка",
   adminNoteOptional: "Заметка / компания (необязательно)",
+  b2bGoodsTotal: "Сумма товаров",
+  b2bPayable: "К оплате",
   prodAll: "Все",
   catSkin: "Уход за кожей",
   catBody: "Уход за телом",

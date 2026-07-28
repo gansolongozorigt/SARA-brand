@@ -35,6 +35,19 @@ export interface OrderCustomer {
   note?: string
 }
 
+/**
+ * Contract-order info (Phase B). Present only for an active reseller. All values
+ * are SERVER-COMPUTED (from api/b2b-quote) — the browser never computes them.
+ * NOTE: this is client-submitted and therefore ADVISORY until Phase C moves order
+ * submission server-side; treat it as informational, not tamper-proof.
+ */
+export interface OrderContract {
+  resellerEmail: string
+  tier: number
+  goodsTotal: number
+  payable: number
+}
+
 /** The stable order shape passed to submitOrder(). Do not reshape lightly. */
 export interface Order {
   customer: OrderCustomer
@@ -43,6 +56,8 @@ export interface Order {
   total: number
   /** Currency unit label for human-readable output ("₮" or "MNT"). */
   currencyLabel: string
+  /** Present only for contract (reseller) orders. */
+  contract?: OrderContract
 }
 
 export interface SubmitResult {
@@ -80,6 +95,16 @@ function buildMessage(order: Order): string {
     )
   }
   lines.push('')
+  if (order.contract) {
+    const c2 = order.contract
+    lines.push('*** CONTRACT ORDER (reseller) ***')
+    lines.push(`  Reseller    : ${c2.resellerEmail}`)
+    lines.push(`  Tier        : ${c2.tier}`)
+    lines.push(`  Goods total : ${money(c2.goodsTotal, currencyLabel)}`)
+    lines.push(`  PAYABLE     : ${money(c2.payable, currencyLabel)}`)
+    lines.push('  (server-computed; advisory until server-side orders in Phase C)')
+    lines.push('')
+  }
   lines.push(`GRAND TOTAL : ${money(total, currencyLabel)}`)
 
   return lines.join('\n')
