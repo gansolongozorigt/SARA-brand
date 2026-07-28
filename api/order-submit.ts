@@ -105,11 +105,6 @@ interface WooLineItem {
 async function createWooOrder(order: Record<string, unknown>): Promise<{ number: string; id: number }> {
   const key = process.env.WOO_WRITE_KEY
   const secret = process.env.WOO_WRITE_SECRET
-  // TEMP DIAGNOSTICS (order-400): presence booleans only — never the values.
-  console.error(
-    '[order-submit] diag v2 write-creds present:',
-    JSON.stringify({ WOO_WRITE_KEY: !!key, WOO_WRITE_SECRET: !!secret, WOO_API_URL: !!process.env.WOO_API_URL }),
-  )
   if (!key || !secret) throw new Error('WOO_WRITE_KEY/SECRET not set')
   const url = `${wcBase()}/orders?consumer_key=${encodeURIComponent(key)}&consumer_secret=${encodeURIComponent(secret)}`
   const res = await fetch(url, {
@@ -119,21 +114,12 @@ async function createWooOrder(order: Record<string, unknown>): Promise<{ number:
   })
   const rawBody = await res.text().catch(() => '')
   if (!res.ok) {
-    // TEMP DIAGNOSTICS: log the FULL WooCommerce error body + the price/fee payload
-    // we sent (line items + fee only — no billing PII, no credentials, no URL).
-    const sent = {
-      status: order.status,
-      currency: order.currency,
-      line_items: order.line_items,
-      fee_lines: order.fee_lines,
-    }
-    console.error(
-      '[order-submit] diag v2 woo order create FAILED',
-      JSON.stringify({ httpStatus: res.status, wooBody: rawBody.slice(0, 800), sent }),
-    )
+    // Log WooCommerce's own error body ({code,message,data}) so a failure is never
+    // opaque again — never the URL or credentials.
+    console.error(`[order-submit] woo order create ${res.status}:`, rawBody.slice(0, 500))
     throw new Error(`woo order create ${res.status}`)
   }
-  const data = (JSON.parse(rawBody || '{}') as { id?: number; number?: string }) ?? {}
+  const data = JSON.parse(rawBody || '{}') as { id?: number; number?: string }
   if (!data.id) throw new Error('woo order create: no id')
   return { number: String(data.number ?? data.id), id: data.id }
 }
@@ -241,6 +227,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       customerNote = customer.note ? `${summary}\n\n${customer.note}` : summary
     }
 
+    // Billing. Email is OPTIONAL at checkout, but WooCommerce rejects an empty-string
+    // email (rest_invalid_email) — so include `email` only when the customer gave one.
+    const billing: Record<string, unknown> = {
+      first_name: customer.name,
+      phone: customer.phone,
+      address_1: customer.address,
+      city: customer.city,
+      country: 'MN',
+    }
+    if (customer.email) billing.email = customer.email
+
     // Build the WooCommerce order. Line items at retail; a negative fee carries the
     // contract discount so the order total equals `payable` (discount rounded at
     // the total, per spec). Stock management is NOT touched (manage_stock:false).
@@ -254,14 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       payment_method: paymentMethod === 'bank' ? 'bacs' : 'cod',
       payment_method_title: paymentMethod === 'bank' ? 'Bank transfer' : 'Cash on delivery',
       set_paid: false,
-      billing: {
-        first_name: customer.name,
-        phone: customer.phone,
-        email: customer.email || '',
-        address_1: customer.address,
-        city: customer.city,
-        country: 'MN',
-      },
+      billing,
       line_items: wooLines,
       customer_note: customerNote,
     }
