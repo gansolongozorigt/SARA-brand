@@ -67,6 +67,8 @@ export const cn: Record<TranslationKey, string> = {
   adminLoading: "加载中…",
   adminError: "发生错误",
   adminNoteOptional: "备注 / 公司（可选）",
+  b2bGoodsTotal: "商品总额",
+  b2bPayable: "应付金额",
   prodAll: "全部",
   catSkin: "护肤",
   catBody: "身体护理",

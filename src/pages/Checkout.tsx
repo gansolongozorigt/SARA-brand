@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { cn } from '../lib/utils'
 import { useCart } from '../store/cart'
 import { PRODUCTS } from '../data/products'
 import { useLivePrices, useLiveSubtotal, useOutOfStockIds, isSoldOut } from '../store/livePrices'
+import { useB2BQuote } from '../store/b2bQuote'
+import { useAuth } from '../store/auth'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { submitOrder, type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -27,7 +29,15 @@ interface SummaryRow {
 type FieldKey = 'fullName' | 'phone' | 'city' | 'address' | 'email'
 
 /** Order summary card — used both in the form view and the confirmation view. */
-function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
+function OrderSummary({
+  rows,
+  total,
+  contract,
+}: {
+  rows: SummaryRow[]
+  total: number
+  contract?: { goodsTotal: number; payable: number } | null
+}) {
   const t = useT()
   const { lang } = useLang()
   const fmt = useFormatPrice()
@@ -63,14 +73,29 @@ function OrderSummary({ rows, total }: { rows: SummaryRow[]; total: number }) {
         })}
       </ul>
       <div className="mt-[18px] border-t border-line pt-[14px]">
-        <div className="flex items-center justify-between text-[13px] text-muted">
-          <span className="uppercase tracking-[0.08em]">{t('subtotal')}</span>
-          <span>{fmt(total)}</span>
-        </div>
-        <div className="mt-[10px] flex items-baseline justify-between">
-          <span className="text-[13px] uppercase tracking-[0.08em] text-ink">{t('grandTotal')}</span>
-          <span className="font-serif text-[22px] font-semibold text-gold3">{fmt(total)}</span>
-        </div>
+        {contract ? (
+          <>
+            <div className="flex items-center justify-between text-[13px] text-muted">
+              <span className="uppercase tracking-[0.08em]">{t('b2bGoodsTotal')}</span>
+              <span>{fmt(contract.goodsTotal)}</span>
+            </div>
+            <div className="mt-[10px] flex items-baseline justify-between">
+              <span className="text-[13px] uppercase tracking-[0.08em] text-ink">{t('b2bPayable')}</span>
+              <span className="font-serif text-[22px] font-semibold text-gold3">{fmt(contract.payable)}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between text-[13px] text-muted">
+              <span className="uppercase tracking-[0.08em]">{t('subtotal')}</span>
+              <span>{fmt(total)}</span>
+            </div>
+            <div className="mt-[10px] flex items-baseline justify-between">
+              <span className="text-[13px] uppercase tracking-[0.08em] text-ink">{t('grandTotal')}</span>
+              <span className="font-serif text-[22px] font-semibold text-gold3">{fmt(total)}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -143,6 +168,14 @@ export default function Checkout() {
   const subtotal = useLiveSubtotal(items)
   const outOfStock = useOutOfStockIds(items)
   const clear = useCart((s) => s.clear)
+  const quote = useB2BQuote()
+  const authUser = useAuth((s) => s.user)
+
+  // Refresh the contract quote on load and whenever the cart changes. No-op for
+  // non-resellers, so guests/non-resellers never hit the endpoint.
+  useEffect(() => {
+    quote.refresh(items)
+  }, [items, quote.refresh])
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -214,8 +247,21 @@ export default function Checkout() {
         const unitPrice = overlays[it.id]?.price ?? p.price
         return [{ id: it.id, name: p.name[lang], qty: it.qty, unitPrice, lineTotal: unitPrice * it.qty }]
       }),
-      total: subtotal,
+      // Contract order → total is the payable amount; attach server-computed
+      // contract info (advisory until Phase C). Otherwise → retail subtotal.
+      total:
+        quote.contract && quote.payable != null ? quote.payable : subtotal,
       currencyLabel: lang === 'mn' ? '₮' : 'MNT',
+      ...(quote.contract && quote.goodsTotal != null && quote.payable != null && authUser
+        ? {
+            contract: {
+              resellerEmail: authUser.email,
+              tier: quote.tier ?? 0,
+              goodsTotal: quote.goodsTotal,
+              payable: quote.payable,
+            },
+          }
+        : {}),
     }
 
     const res = await submitOrder(order)
@@ -259,7 +305,11 @@ export default function Checkout() {
           </div>
 
           <div className="mt-[28px]">
-            <OrderSummary rows={confirmRows} total={placed.total} />
+            <OrderSummary
+              rows={confirmRows}
+              total={placed.total}
+              contract={placed.contract ? { goodsTotal: placed.contract.goodsTotal, payable: placed.contract.payable } : null}
+            />
           </div>
 
           {placed.payment === 'bank' && <BankDetails />}
@@ -361,7 +411,15 @@ export default function Checkout() {
 
         {/* Summary + place order (sticky on desktop) */}
         <div className="lg:sticky lg:top-[92px]">
-          <OrderSummary rows={rows} total={subtotal} />
+          <OrderSummary
+            rows={rows}
+            total={subtotal}
+            contract={
+              quote.contract && quote.goodsTotal != null && quote.payable != null
+                ? { goodsTotal: quote.goodsTotal, payable: quote.payable }
+                : null
+            }
+          />
 
           {submitError && (
             <div className="mt-[14px] rounded-[12px] border border-[#e0b3a6] bg-[rgba(192,86,61,0.07)] px-[14px] py-[11px] text-[13px] text-[#a4452f]">

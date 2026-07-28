@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../store/cart'
 import { PRODUCTS } from '../../data/products'
 import { useLivePrices, useLiveSubtotal, useOutOfStockIds } from '../../store/livePrices'
+import { useB2BQuote } from '../../store/b2bQuote'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import { cn } from '../../lib/utils'
 import Price from '../ui/Price'
@@ -20,6 +21,13 @@ export default function CartDrawer() {
   const overlays = useLivePrices((s) => s.overlays)
   const subtotal = useLiveSubtotal(items)
   const outOfStock = useOutOfStockIds(items)
+  const quote = useB2BQuote()
+
+  // Refresh the contract quote when the drawer opens and whenever the cart
+  // contents change (debounced server-side helper). No-op for non-resellers.
+  useEffect(() => {
+    if (isOpen) quote.refresh(items)
+  }, [isOpen, items, quote.refresh])
 
   // Escape to close + lock body scroll while open.
   useEffect(() => {
@@ -141,10 +149,23 @@ export default function CartDrawer() {
             {/* Footer: subtotal + checkout */}
             {items.length > 0 && (
               <div className="border-t border-line px-[24px] py-[18px]">
-                <div className="flex items-center justify-between pb-[14px]">
-                  <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('subtotal')}</span>
-                  <span className="font-serif text-[20px] font-semibold text-ink"><Price amount={subtotal} /></span>
-                </div>
+                {quote.contract && quote.goodsTotal != null && quote.payable != null ? (
+                  <div className="pb-[14px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('b2bGoodsTotal')}</span>
+                      <span className="text-[15px] text-muted"><Price amount={quote.goodsTotal} /></span>
+                    </div>
+                    <div className="mt-[8px] flex items-baseline justify-between">
+                      <span className="text-[13px] uppercase tracking-[0.1em] text-ink">{t('b2bPayable')}</span>
+                      <span className="font-serif text-[22px] font-semibold text-gold3"><Price amount={quote.payable} /></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between pb-[14px]">
+                    <span className="text-[13px] uppercase tracking-[0.1em] text-muted">{t('subtotal')}</span>
+                    <span className="font-serif text-[20px] font-semibold text-ink"><Price amount={subtotal} /></span>
+                  </div>
+                )}
                 {/* Checkout — blocked while any line is out of stock (must be removed first) */}
                 <button
                   type="button"

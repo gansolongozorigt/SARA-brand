@@ -65,6 +65,8 @@ export const mn = {
   adminLoading: "Ачааллаж байна…",
   adminError: "Алдаа гарлаа",
   adminNoteOptional: "Тэмдэглэл / компани (заавал биш)",
+  b2bGoodsTotal: "Барааны нийт үнэ",
+  b2bPayable: "Таны төлөх дүн",
   prodAll: "Бүгд",
   catSkin: "Арьс арчилгаа",
   catBody: "Бие арчилгаа",
