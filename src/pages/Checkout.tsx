@@ -9,7 +9,7 @@ import { useB2BQuote } from '../store/b2bQuote'
 import { useAuth } from '../store/auth'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
-import { submitOrder, type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
+import { type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
 
 // Shop's bank-transfer details shown on the confirmation screen.
 const BANK = {
@@ -231,46 +231,73 @@ export default function Checkout() {
     setSubmitError(null)
     setSubmitting(true)
 
-    const order: Order = {
-      customer: {
-        fullName: fullName.trim(),
-        phone: phone.replace(/\s+/g, ''),
-        city: city.trim(),
-        address: address.trim(),
-        email: email.trim() || undefined,
-        note: note.trim() || undefined,
-      },
-      payment,
-      items: items.flatMap<OrderItem>((it) => {
-        const p = PRODUCTS.find((x) => x.id === it.id)
-        if (!p) return []
-        const unitPrice = overlays[it.id]?.price ?? p.price
-        return [{ id: it.id, name: p.name[lang], qty: it.qty, unitPrice, lineTotal: unitPrice * it.qty }]
-      }),
-      // Contract order → total is the payable amount; attach server-computed
-      // contract info (advisory until Phase C). Otherwise → retail subtotal.
-      total:
-        quote.contract && quote.payable != null ? quote.payable : subtotal,
-      currencyLabel: lang === 'mn' ? '₮' : 'MNT',
-      ...(quote.contract && quote.goodsTotal != null && quote.payable != null && authUser
-        ? {
-            contract: {
-              resellerEmail: authUser.email,
-              tier: quote.tier ?? 0,
-              goodsTotal: quote.goodsTotal,
-              payable: quote.payable,
-            },
-          }
-        : {}),
-    }
+    // Submit server-side. The browser sends only items+customer+payment — never
+    // prices, totals, tier or discount. Success/failure is decided by the server.
+    try {
+      const res = await fetch('/api/order-submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          items: items.map((i) => ({ sku: i.id, qty: i.qty })),
+          customer: {
+            name: fullName.trim(),
+            phone: phone.replace(/\s+/g, ''),
+            city: city.trim(),
+            address: address.trim(),
+            email: email.trim() || undefined,
+            note: note.trim() || undefined,
+          },
+          paymentMethod: payment,
+        }),
+      })
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean
+        orderNumber?: string
+        goodsTotal?: number
+        payable?: number
+        contract?: boolean
+        tier?: number
+        error?: string
+      } | null
 
-    const res = await submitOrder(order)
-    if (res.ok) {
-      setPlaced(order)
-      clear()
-      setSubmitting(false)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
+      if (res.ok && data?.ok) {
+        // Confirmation snapshot: line items from the current cart (display only) +
+        // the server's authoritative totals + WooCommerce order number.
+        const displayItems = items.flatMap<OrderItem>((it) => {
+          const p = PRODUCTS.find((x) => x.id === it.id)
+          if (!p) return []
+          const unitPrice = overlays[it.id]?.price ?? p.price
+          return [{ id: it.id, name: p.name[lang], qty: it.qty, unitPrice, lineTotal: unitPrice * it.qty }]
+        })
+        const placedOrder: Order = {
+          customer: {
+            fullName: fullName.trim(),
+            phone: phone.replace(/\s+/g, ''),
+            city: city.trim(),
+            address: address.trim(),
+            email: email.trim() || undefined,
+            note: note.trim() || undefined,
+          },
+          payment,
+          items: displayItems,
+          total: data.payable ?? data.goodsTotal ?? subtotal,
+          currencyLabel: lang === 'mn' ? '₮' : 'MNT',
+          orderNumber: data.orderNumber,
+          ...(data.contract && data.goodsTotal != null && data.payable != null && authUser
+            ? { contract: { resellerEmail: authUser.email, tier: data.tier ?? 0, goodsTotal: data.goodsTotal, payable: data.payable } }
+            : {}),
+        }
+        setPlaced(placedOrder)
+        clear() // order placed → empty the cart
+        setSubmitting(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } else {
+        // Never show success on failure. Keep the cart + stay on the form.
+        setSubmitting(false)
+        setSubmitError(data?.error === 'out_of_stock' ? t('cartUnavailable') : t('coError'))
+      }
+    } catch {
       setSubmitting(false)
       setSubmitError(t('coError'))
     }
@@ -302,6 +329,11 @@ export default function Checkout() {
             <div className="text-[12px] font-semibold uppercase tracking-[0.2em] text-gold3">{t('coKick')}</div>
             <h1 className="mt-[6px] font-serif text-[34px] font-semibold leading-tight text-ink max-[680px]:text-[27px]">{t('coDoneTitle')}</h1>
             <p className="mx-auto mt-[10px] max-w-[470px] text-[14.5px] leading-relaxed text-muted">{t('coDoneMsg')}</p>
+            {placed.orderNumber && (
+              <p className="mt-[14px] text-[14px] text-ink">
+                {t('coOrderNumber')}: <span className="font-semibold text-gold3">#{placed.orderNumber}</span>
+              </p>
+            )}
           </div>
 
           <div className="mt-[28px]">

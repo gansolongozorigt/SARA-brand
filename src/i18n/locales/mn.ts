@@ -67,6 +67,7 @@ export const mn = {
   adminNoteOptional: "Тэмдэглэл / компани (заавал биш)",
   b2bGoodsTotal: "Барааны нийт үнэ",
   b2bPayable: "Таны төлөх дүн",
+  coOrderNumber: "Захиалгын дугаар",
   prodAll: "Бүгд",
   catSkin: "Арьс арчилгаа",
   catBody: "Бие арчилгаа",

@@ -72,6 +72,7 @@ export const ko: Record<TranslationKey, string> = {
   adminNoteOptional: "메모 / 회사 (선택)",
   b2bGoodsTotal: "상품 합계",
   b2bPayable: "결제 금액",
+  coOrderNumber: "주문 번호",
   prodAll: "전체",
   catSkin: "스킨케어",
   // "바디케어" is the standard K-beauty term for body care. TODO(human-review): confirm preferred spacing ("바디 케어") if desired.

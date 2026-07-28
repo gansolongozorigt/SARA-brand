@@ -69,6 +69,7 @@ export const en: Record<TranslationKey, string> = {
   adminNoteOptional: "Note / company (optional)",
   b2bGoodsTotal: "Goods total",
   b2bPayable: "Amount payable",
+  coOrderNumber: "Order number",
   prodAll: "All",
   catSkin: "Skincare",
   catBody: "Body care",

@@ -69,6 +69,7 @@ export const cn: Record<TranslationKey, string> = {
   adminNoteOptional: "备注 / 公司（可选）",
   b2bGoodsTotal: "商品总额",
   b2bPayable: "应付金额",
+  coOrderNumber: "订单号",
   prodAll: "全部",
   catSkin: "护肤",
   catBody: "身体护理",
