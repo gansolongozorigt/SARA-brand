@@ -112,8 +112,14 @@ async function createWooOrder(order: Record<string, unknown>): Promise<{ number:
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(order),
   })
-  if (!res.ok) throw new Error(`woo order create ${res.status}`)
-  const data = (await res.json()) as { id?: number; number?: string }
+  const rawBody = await res.text().catch(() => '')
+  if (!res.ok) {
+    // Log WooCommerce's own error body ({code,message,data}) so a failure is never
+    // opaque again — never the URL or credentials.
+    console.error(`[order-submit] woo order create ${res.status}:`, rawBody.slice(0, 500))
+    throw new Error(`woo order create ${res.status}`)
+  }
+  const data = JSON.parse(rawBody || '{}') as { id?: number; number?: string }
   if (!data.id) throw new Error('woo order create: no id')
   return { number: String(data.number ?? data.id), id: data.id }
 }
@@ -221,6 +227,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       customerNote = customer.note ? `${summary}\n\n${customer.note}` : summary
     }
 
+    // Billing. Email is OPTIONAL at checkout, but WooCommerce rejects an empty-string
+    // email (rest_invalid_email) — so include `email` only when the customer gave one.
+    const billing: Record<string, unknown> = {
+      first_name: customer.name,
+      phone: customer.phone,
+      address_1: customer.address,
+      city: customer.city,
+      country: 'MN',
+    }
+    if (customer.email) billing.email = customer.email
+
     // Build the WooCommerce order. Line items at retail; a negative fee carries the
     // contract discount so the order total equals `payable` (discount rounded at
     // the total, per spec). Stock management is NOT touched (manage_stock:false).
@@ -234,14 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       payment_method: paymentMethod === 'bank' ? 'bacs' : 'cod',
       payment_method_title: paymentMethod === 'bank' ? 'Bank transfer' : 'Cash on delivery',
       set_paid: false,
-      billing: {
-        first_name: customer.name,
-        phone: customer.phone,
-        email: customer.email || '',
-        address_1: customer.address,
-        city: customer.city,
-        country: 'MN',
-      },
+      billing,
       line_items: wooLines,
       customer_note: customerNote,
     }
