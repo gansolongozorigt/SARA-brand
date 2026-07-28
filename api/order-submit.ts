@@ -105,6 +105,11 @@ interface WooLineItem {
 async function createWooOrder(order: Record<string, unknown>): Promise<{ number: string; id: number }> {
   const key = process.env.WOO_WRITE_KEY
   const secret = process.env.WOO_WRITE_SECRET
+  // TEMP DIAGNOSTICS (order-400): presence booleans only — never the values.
+  console.error(
+    '[order-submit] diag v2 write-creds present:',
+    JSON.stringify({ WOO_WRITE_KEY: !!key, WOO_WRITE_SECRET: !!secret, WOO_API_URL: !!process.env.WOO_API_URL }),
+  )
   if (!key || !secret) throw new Error('WOO_WRITE_KEY/SECRET not set')
   const url = `${wcBase()}/orders?consumer_key=${encodeURIComponent(key)}&consumer_secret=${encodeURIComponent(secret)}`
   const res = await fetch(url, {
@@ -112,8 +117,23 @@ async function createWooOrder(order: Record<string, unknown>): Promise<{ number:
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(order),
   })
-  if (!res.ok) throw new Error(`woo order create ${res.status}`)
-  const data = (await res.json()) as { id?: number; number?: string }
+  const rawBody = await res.text().catch(() => '')
+  if (!res.ok) {
+    // TEMP DIAGNOSTICS: log the FULL WooCommerce error body + the price/fee payload
+    // we sent (line items + fee only — no billing PII, no credentials, no URL).
+    const sent = {
+      status: order.status,
+      currency: order.currency,
+      line_items: order.line_items,
+      fee_lines: order.fee_lines,
+    }
+    console.error(
+      '[order-submit] diag v2 woo order create FAILED',
+      JSON.stringify({ httpStatus: res.status, wooBody: rawBody.slice(0, 800), sent }),
+    )
+    throw new Error(`woo order create ${res.status}`)
+  }
+  const data = (JSON.parse(rawBody || '{}') as { id?: number; number?: string }) ?? {}
   if (!data.id) throw new Error('woo order create: no id')
   return { number: String(data.number ?? data.id), id: data.id }
 }
