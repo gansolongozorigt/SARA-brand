@@ -166,7 +166,9 @@ function buildEmail(input: {
 }
 
 async function sendEmail(subject: string, message: string, replyName: string, replyEmail: string): Promise<void> {
-  const accessKey = process.env.WEB3FORMS_ACCESS_KEY || '591aa615-3e7d-47a1-b4f7-846e8b485e3f'
+  const envKey = process.env.WEB3FORMS_ACCESS_KEY
+  const accessKey = envKey || '591aa615-3e7d-47a1-b4f7-846e8b485e3f'
+  const keySource = envKey ? 'env' : 'fallback' // which SOURCE, never the value
   const res = await fetch(WEB3FORMS_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -179,8 +181,18 @@ async function sendEmail(subject: string, message: string, replyName: string, re
       message,
     }),
   })
-  const data = (await res.json().catch(() => null)) as { success?: boolean } | null
-  if (!res.ok || !data?.success) throw new Error('web3forms failed')
+  // Read the raw body so we can log Web3Forms' actual error (their errors are
+  // JSON with a `message`). Never log the access key itself.
+  const rawBody = await res.text().catch(() => '')
+  let success = false
+  try {
+    success = !!(JSON.parse(rawBody) as { success?: boolean }).success
+  } catch {
+    /* non-JSON body */
+  }
+  if (!res.ok || !success) {
+    throw new Error(`web3forms rejected: status=${res.status} keySource=${keySource} body=${rawBody.slice(0, 400)}`)
+  }
 }
 
 // ----- handler -----
