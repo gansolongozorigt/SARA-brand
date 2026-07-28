@@ -203,6 +203,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     const payable = contract ? Math.round(goodsTotal * (1 - discountForTier(contract.tier))) : goodsTotal
 
+    // Contract orders: prepend a compact, clearly-separated contract summary to the
+    // customer note so it shows in WooCommerce's admin "New order" email (which does
+    // not render order meta). Retail orders: the customer's note only.
+    const mnt = (n: number) => `${n.toLocaleString('en-US')}₮`
+    let customerNote = customer.note || ''
+    if (contract) {
+      const summary = [
+        '=== SARA CONTRACT ORDER ===',
+        `Reseller: ${contract.resellerEmail}`,
+        `Tier: ${contract.tier}`,
+        `Goods total: ${mnt(goodsTotal)}`,
+        `Payable: ${mnt(payable)}`,
+        '===========================',
+      ].join('\n')
+      customerNote = customer.note ? `${summary}\n\n${customer.note}` : summary
+    }
+
     // Build the WooCommerce order. Line items at retail; a negative fee carries the
     // contract discount so the order total equals `payable` (discount rounded at
     // the total, per spec). Stock management is NOT touched (manage_stock:false).
@@ -221,7 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         country: 'MN',
       },
       line_items: wooLines,
-      customer_note: customer.note || '',
+      customer_note: customerNote,
     }
     if (contract) {
       wooOrder.fee_lines = [
