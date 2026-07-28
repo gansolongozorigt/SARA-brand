@@ -3,11 +3,12 @@ import { readSession } from './_authServer.js'
 import { readReseller, statusFor, discountForTier, type Tier } from './_reseller.js'
 
 /**
- * Server-side order submission (Phase C). Creates a REAL WooCommerce order.
- * Prices, totals, tier and discount are ALL computed here — the client sends only
- * { items:[{sku,qty}], customer, paymentMethod }, never money. Shop notification
- * is handled by WooCommerce's own "New order" admin email (no third-party email
- * step — server-side Web3Forms is blocked by Cloudflare).
+ * Server-side order submission (Phase C). Creates a REAL WooCommerce order with
+ * status 'on-hold' (awaiting payment) — the pending→on-hold transition is what
+ * fires WooCommerce's "New order" admin email. Prices, totals, tier and discount
+ * are ALL computed here — the client sends only { items:[{sku,qty}], customer,
+ * paymentMethod }, never money. Shop notification is handled by that WooCommerce
+ * email (no third-party step — server-side Web3Forms is blocked by Cloudflare).
  *
  * Responses:
  *   { ok:true, orderNumber, goodsTotal, payable, contract, tier }
@@ -224,7 +225,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // contract discount so the order total equals `payable` (discount rounded at
     // the total, per spec). Stock management is NOT touched (manage_stock:false).
     const wooOrder: Record<string, unknown> = {
-      status: 'pending',
+      // 'on-hold' = awaiting payment (our bank-transfer flow). Creating as on-hold
+      // produces a pending→on-hold status transition, which is the hook WooCommerce's
+      // "New order" admin email is registered on — a create-and-stay-'pending' order
+      // fires no email.
+      status: 'on-hold',
       currency: 'MNT',
       payment_method: paymentMethod === 'bank' ? 'bacs' : 'cod',
       payment_method_title: paymentMethod === 'bank' ? 'Bank transfer' : 'Cash on delivery',
