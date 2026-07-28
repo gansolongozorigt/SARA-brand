@@ -3,21 +3,20 @@ import { readSession } from './_authServer.js'
 import { readReseller, statusFor, discountForTier, type Tier } from './_reseller.js'
 
 /**
- * Server-side order submission (Phase C). Creates a REAL WooCommerce order and
- * emails the shop. Prices, totals, tier and discount are ALL computed here — the
- * client sends only { items:[{sku,qty}], customer, paymentMethod }, never money.
+ * Server-side order submission (Phase C). Creates a REAL WooCommerce order.
+ * Prices, totals, tier and discount are ALL computed here — the client sends only
+ * { items:[{sku,qty}], customer, paymentMethod }, never money. Shop notification
+ * is handled by WooCommerce's own "New order" admin email (no third-party email
+ * step — server-side Web3Forms is blocked by Cloudflare).
  *
  * Responses:
  *   { ok:true, orderNumber, goodsTotal, payable, contract, tier }
  *   { ok:false, error:'invalid'|'out_of_stock'|'order_failed', items? }
  *
- * Partial failure: if the order is created but the email fails, we STILL return
- * success (email failure is logged server-side). If order creation fails, we
- * return an error and the client must not show success.
+ * If order creation fails we return an error and the client must not show success.
  */
 const MAX_QTY = 999
 const MAX_ITEMS = 100
-const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit'
 
 // ----- input hygiene -----
 
@@ -118,83 +117,6 @@ async function createWooOrder(order: Record<string, unknown>): Promise<{ number:
   return { number: String(data.number ?? data.id), id: data.id }
 }
 
-// ----- notification email (server-side; server-computed values) -----
-
-function money(n: number): string {
-  return `${n.toLocaleString('en-US')}₮`
-}
-
-function buildEmail(input: {
-  customer: { name: string; phone: string; city: string; address: string; email?: string; note?: string }
-  paymentMethod: 'bank' | 'cod'
-  lines: { name: string; qty: number; unit: number; total: number }[]
-  goodsTotal: number
-  payable: number
-  contract: { resellerEmail: string; tier: number } | null
-  orderNumber: string
-}): string {
-  const c = input.customer
-  const out: string[] = []
-  out.push(`NEW ORDER — SARA  (WooCommerce #${input.orderNumber})`)
-  out.push('========================')
-  out.push('')
-  out.push('CUSTOMER')
-  out.push(`  Name    : ${c.name}`)
-  out.push(`  Phone   : ${c.phone}`)
-  out.push(`  City    : ${c.city}`)
-  out.push(`  Address : ${c.address}`)
-  if (c.email) out.push(`  Email   : ${c.email}`)
-  if (c.note) out.push(`  Note    : ${c.note}`)
-  out.push('')
-  out.push(`PAYMENT : ${input.paymentMethod === 'bank' ? 'Bank transfer' : 'Cash on delivery (COD)'}`)
-  out.push('')
-  out.push('ITEMS')
-  for (const it of input.lines) {
-    out.push(`  • ${it.name} × ${it.qty}  —  ${money(it.unit)} ea  =  ${money(it.total)}`)
-  }
-  out.push('')
-  if (input.contract) {
-    out.push('*** CONTRACT ORDER (reseller) ***')
-    out.push(`  Reseller    : ${input.contract.resellerEmail}`)
-    out.push(`  Tier        : ${input.contract.tier}`)
-    out.push(`  Goods total : ${money(input.goodsTotal)}`)
-    out.push(`  PAYABLE     : ${money(input.payable)}`)
-    out.push('')
-  }
-  out.push(`GRAND TOTAL : ${money(input.contract ? input.payable : input.goodsTotal)}`)
-  return out.join('\n')
-}
-
-async function sendEmail(subject: string, message: string, replyName: string, replyEmail: string): Promise<void> {
-  const envKey = process.env.WEB3FORMS_ACCESS_KEY
-  const accessKey = envKey || '591aa615-3e7d-47a1-b4f7-846e8b485e3f'
-  const keySource = envKey ? 'env' : 'fallback' // which SOURCE, never the value
-  const res = await fetch(WEB3FORMS_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      access_key: accessKey,
-      subject,
-      from_name: 'SARA storefront',
-      name: replyName,
-      email: replyEmail || 'no-reply@sarabrand.mn',
-      message,
-    }),
-  })
-  // Read the raw body so we can log Web3Forms' actual error (their errors are
-  // JSON with a `message`). Never log the access key itself.
-  const rawBody = await res.text().catch(() => '')
-  let success = false
-  try {
-    success = !!(JSON.parse(rawBody) as { success?: boolean }).success
-  } catch {
-    /* non-JSON body */
-  }
-  if (!res.ok || !success) {
-    throw new Error(`web3forms rejected: status=${res.status} keySource=${keySource} body=${rawBody.slice(0, 400)}`)
-  }
-}
-
 // ----- handler -----
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -271,7 +193,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Server-computed money.
     const wooLines: WooLineItem[] = []
-    const emailLines: { name: string; qty: number; unit: number; total: number }[] = []
     let goodsTotal = 0
     for (const { sku, qty } of lines) {
       const e = prices.get(sku)!
@@ -279,7 +200,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const lineTotal = unit * qty
       goodsTotal += lineTotal
       wooLines.push({ product_id: e.productId, quantity: qty, subtotal: String(lineTotal), total: String(lineTotal) })
-      emailLines.push({ name: sku, qty, unit, total: lineTotal })
     }
     const payable = contract ? Math.round(goodsTotal * (1 - discountForTier(contract.tier))) : goodsTotal
 
@@ -315,17 +235,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ]
     }
 
-    // Create the order first — this is the operation that must succeed.
+    // Create the WooCommerce order. The shop is notified by WooCommerce's own
+    // "New order" admin email (configured in WP admin) — no third-party email step.
     const created = await createWooOrder(wooOrder)
-
-    // Then email the shop. A failure here must NOT fail the order.
-    try {
-      const subject = `SARA - new order #${created.number}${contract ? ' (contract)' : ''}`
-      const message = buildEmail({ customer, paymentMethod, lines: emailLines, goodsTotal, payable, contract, orderNumber: created.number })
-      await sendEmail(subject, message, customer.name, customer.email)
-    } catch (e) {
-      console.error('[order-submit] email failed (order still placed):', (e as Error).message)
-    }
 
     return res.status(200).json({
       ok: true,
