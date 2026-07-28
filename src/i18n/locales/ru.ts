@@ -69,6 +69,7 @@ export const ru: Record<TranslationKey, string> = {
   adminNoteOptional: "Заметка / компания (необязательно)",
   b2bGoodsTotal: "Сумма товаров",
   b2bPayable: "К оплате",
+  coOrderNumber: "Номер заказа",
   prodAll: "Все",
   catSkin: "Уход за кожей",
   catBody: "Уход за телом",
