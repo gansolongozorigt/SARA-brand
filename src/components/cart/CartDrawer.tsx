@@ -1,13 +1,14 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCart } from '../../store/cart'
+import { useCart, selectHasResolvedItems } from '../../store/cart'
 import { PRODUCTS } from '../../data/products'
 import { useLivePrices, useLiveSubtotal, useOutOfStockIds } from '../../store/livePrices'
 import { useB2BQuote } from '../../store/b2bQuote'
 import { useLang, useT } from '../../i18n/LanguageContext'
 import { cn } from '../../lib/utils'
 import Price from '../ui/Price'
+import ContractPricingNotice from './ContractPricingNotice'
 
 export default function CartDrawer() {
   const t = useT()
@@ -18,6 +19,8 @@ export default function CartDrawer() {
   const items = useCart((s) => s.items)
   const setQty = useCart((s) => s.setQty)
   const removeItem = useCart((s) => s.removeItem)
+  const clear = useCart((s) => s.clear)
+  const hasResolvedItems = useCart(selectHasResolvedItems)
   const overlays = useLivePrices((s) => s.overlays)
   const subtotal = useLiveSubtotal(items)
   const outOfStock = useOutOfStockIds(items)
@@ -85,7 +88,7 @@ export default function CartDrawer() {
 
             {/* Items / empty state */}
             <div className="flex-1 overflow-y-auto px-[24px]">
-              {items.length === 0 ? (
+              {!hasResolvedItems ? (
                 <div className="flex h-full items-center justify-center">
                   <p className="text-center text-[14px] text-muted">{t('emptyCart')}</p>
                 </div>
@@ -147,8 +150,9 @@ export default function CartDrawer() {
             </div>
 
             {/* Footer: subtotal + checkout */}
-            {items.length > 0 && (
+            {hasResolvedItems && (
               <div className="border-t border-line px-[24px] py-[18px]">
+                <ContractPricingNotice className="mb-[14px]" />
                 {quote.contract && quote.goodsTotal != null && quote.payable != null ? (
                   <div className="pb-[14px]">
                     <div className="flex items-center justify-between">
@@ -166,18 +170,26 @@ export default function CartDrawer() {
                     <span className="font-serif text-[20px] font-semibold text-ink"><Price amount={subtotal} /></span>
                   </div>
                 )}
-                {/* Checkout — blocked while any line is out of stock (must be removed first) */}
+                {/* Checkout — blocked when out of stock or when the resolved cart is empty */}
                 <button
                   type="button"
-                  disabled={outOfStock.size > 0}
+                  disabled={outOfStock.size > 0 || !hasResolvedItems}
                   onClick={() => {
-                    if (outOfStock.size > 0) return
+                    if (outOfStock.size > 0 || !hasResolvedItems) return
                     closeCart()
                     navigate('/checkout')
                   }}
                   className="gold-bg w-full rounded-full py-[13px] text-[13px] font-semibold uppercase tracking-[0.06em] text-[#241c08] transition-transform duration-200 hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0"
                 >
                   {t('checkout')}
+                </button>
+                {/* Clear the whole cart */}
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="mt-[10px] w-full text-center text-[12px] text-muted underline-offset-2 transition-colors hover:text-gold3 hover:underline"
+                >
+                  {t('cartClear')}
                 </button>
               </div>
             )}

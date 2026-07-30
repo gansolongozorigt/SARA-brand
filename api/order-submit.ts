@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { readSession } from './_authServer.js'
+import { checkSession, clearSessionCookie } from './_authServer.js'
 import { readReseller, statusFor, discountForTier, type Tier } from './_reseller.js'
 
 /**
@@ -12,7 +12,10 @@ import { readReseller, statusFor, discountForTier, type Tier } from './_reseller
  *
  * Responses:
  *   { ok:true, orderNumber, goodsTotal, payable, contract, tier }
- *   { ok:false, error:'invalid'|'out_of_stock'|'order_failed', items? }
+ *   { ok:false, error, items?/fields? } — unique codes:
+ *     400 bad_body | no_items | missing_customer(+fields) | bad_email | bad_payment
+ *         | unknown_sku(+items) | no_price(+items)
+ *     409 out_of_stock(+items) · 502 session_unavailable | order_failed
  *
  * If order creation fails we return an error and the client must not show success.
  */
@@ -137,7 +140,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = (typeof req.body === 'string' ? safeParse(req.body) : req.body) as
     | { items?: unknown; customer?: unknown; paymentMethod?: unknown }
     | null
-  if (!body || typeof body !== 'object') return res.status(400).json({ ok: false, error: 'invalid' })
+  // Each early return carries a UNIQUE error code and a server-side log line
+  // (field names / SKUs / counts only — never customer data, never secrets).
+  if (!body || typeof body !== 'object') {
+    console.error('order-submit reject:', 'bad_body')
+    return res.status(400).json({ ok: false, error: 'bad_body' })
+  }
 
   const rawItems = Array.isArray(body.items) ? body.items : []
   const lines: { sku: string; qty: number }[] = []
@@ -149,7 +157,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!sku || !Number.isInteger(qty) || qty <= 0) continue
     lines.push({ sku, qty: Math.min(qty, MAX_QTY) })
   }
-  if (lines.length === 0) return res.status(400).json({ ok: false, error: 'invalid' })
+  if (lines.length === 0) {
+    console.error('order-submit reject:', 'no_items', { received: rawItems.length })
+    return res.status(400).json({ ok: false, error: 'no_items' })
+  }
 
   const rawCustomer = (body.customer ?? {}) as Record<string, unknown>
   const customer = {
@@ -160,43 +171,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     email: clean(rawCustomer.email, 150),
     note: clean(rawCustomer.note, 500),
   }
-  if (!customer.name || !customer.phone || !customer.city || !customer.address) {
-    return res.status(400).json({ ok: false, error: 'invalid' })
+  const missing = (['name', 'phone', 'city', 'address'] as const).filter((f) => !customer[f])
+  if (missing.length) {
+    console.error('order-submit reject:', 'missing_customer', { fields: missing })
+    return res.status(400).json({ ok: false, error: 'missing_customer', fields: missing })
   }
   if (customer.email && !EMAIL_RE.test(customer.email)) {
-    return res.status(400).json({ ok: false, error: 'invalid' })
+    console.error('order-submit reject:', 'bad_email')
+    return res.status(400).json({ ok: false, error: 'bad_email' })
   }
-  const paymentMethod: 'bank' | 'cod' = body.paymentMethod === 'cod' ? 'cod' : body.paymentMethod === 'bank' ? 'bank' : 'bank'
   if (body.paymentMethod !== 'bank' && body.paymentMethod !== 'cod') {
-    return res.status(400).json({ ok: false, error: 'invalid' })
+    console.error('order-submit reject:', 'bad_payment')
+    return res.status(400).json({ ok: false, error: 'bad_payment' })
   }
+  const paymentMethod: 'bank' | 'cod' = body.paymentMethod
 
   try {
     const prices = await fetchWooPrices()
 
-    // Unknown SKU or out-of-stock → reject clearly (never silently drop a line).
-    const unknown: string[] = []
+    // Classify each line: unknown SKU (no Woo entry), no usable price, or OOS.
+    const unknownSku: string[] = []
+    const noPrice: string[] = []
     const oos: string[] = []
     for (const { sku } of lines) {
       const e = prices.get(sku)
-      if (!e || e.price == null) unknown.push(sku)
+      if (!e) unknownSku.push(sku)
+      else if (e.price == null) noPrice.push(sku)
       else if (e.outOfStock) oos.push(sku)
     }
-    if (oos.length) return res.status(409).json({ ok: false, error: 'out_of_stock', items: oos })
-    if (unknown.length) return res.status(400).json({ ok: false, error: 'invalid', items: unknown })
-
-    // Reseller tier from the REGISTRY (never the request).
-    let contract: { resellerEmail: string; tier: Tier } | null = null
-    const secret = process.env.SESSION_SECRET
-    if (secret) {
-      const session = readSession(req.headers.cookie, secret)
-      if (session) {
-        const record = await readReseller(session.email.toLowerCase())
-        if (record && statusFor(record) === 'active') {
-          contract = { resellerEmail: session.email.toLowerCase(), tier: record.tier }
-        }
-      }
+    if (oos.length) {
+      console.error('order-submit reject:', 'out_of_stock', { skus: oos })
+      return res.status(409).json({ ok: false, error: 'out_of_stock', items: oos })
     }
+    if (unknownSku.length) {
+      console.error('order-submit reject:', 'unknown_sku', { skus: unknownSku })
+      return res.status(400).json({ ok: false, error: 'unknown_sku', items: unknownSku })
+    }
+    if (noPrice.length) {
+      console.error('order-submit reject:', 'no_price', { skus: noPrice })
+      return res.status(400).json({ ok: false, error: 'no_price', items: noPrice })
+    }
+
+    // Reseller tier from the REGISTRY (never the request). Distinguish the three
+    // session conditions so a stale cookie never blocks ordering:
+    //   misconfigured (secret missing) → 502, pricing is never silently downgraded.
+    //   stale (invalid/expired cookie)  → clear it and continue as guest/retail.
+    //   valid                            → apply the reseller's tier.
+    let contract: { resellerEmail: string; tier: Tier } | null = null
+    const sess = checkSession(req.headers.cookie, process.env.SESSION_SECRET)
+    if (sess.status === 'misconfigured') {
+      console.error('order-submit reject:', 'session_unavailable', { reason: 'secret_missing' })
+      return res.status(502).json({ ok: false, error: 'session_unavailable' })
+    }
+    if (sess.status === 'stale') {
+      res.setHeader('Set-Cookie', clearSessionCookie())
+      console.warn('order-submit: stale session cookie cleared')
+    }
+    if (sess.status === 'valid') {
+      const record = await readReseller(sess.user.email.toLowerCase())
+      if (record && statusFor(record) === 'active') {
+        contract = { resellerEmail: sess.user.email.toLowerCase(), tier: record.tier }
+      }
+      // signed-in but not an active reseller → retail (contract stays null)
+    }
+    // 'guest' → retail (contract stays null)
 
     // Server-computed money.
     const wooLines: WooLineItem[] = []
