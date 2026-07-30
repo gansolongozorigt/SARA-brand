@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { readSession } from './_authServer.js'
+import { checkSession, clearSessionCookie } from './_authServer.js'
 import { readReseller, statusFor, discountForTier } from './_reseller.js'
 
 /**
@@ -87,13 +87,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const secret = process.env.SESSION_SECRET
-    if (!secret) return noContract(res)
-    const session = readSession(req.headers.cookie, secret)
-    if (!session) return noContract(res)
+    // Display-only pricing helper: never 502 (that would blank the cart). Retail is
+    // always returned; the difference is signalled so the UI can explain it.
+    const sess = checkSession(req.headers.cookie, process.env.SESSION_SECRET)
+    if (sess.status === 'stale') {
+      res.setHeader('Set-Cookie', clearSessionCookie())
+      console.warn('b2b-quote: stale session cookie cleared')
+    }
+    if (sess.status === 'misconfigured') console.error('[b2b-quote] SESSION_SECRET missing')
+    // A session cookie WAS present but contract pricing could not be applied
+    // (server misconfig or a stale/expired-signature cookie). Flag it so the UI
+    // can show a calm notice — NOT for genuine guests, and NOT for a logged-in
+    // reseller whose contract has merely expired (that has its own renewal notice).
+    if (sess.status === 'misconfigured' || sess.status === 'stale') {
+      return res.status(200).json({ contract: false, contractPricingUnavailable: true })
+    }
+    if (sess.status !== 'valid') return noContract(res) // genuine guest → retail, no flag
 
-    const record = await readReseller(session.email.toLowerCase())
-    if (!record || statusFor(record) !== 'active') return noContract(res)
+    const record = await readReseller(sess.user.email.toLowerCase())
+    if (!record || statusFor(record) !== 'active') return noContract(res) // none/expired → retail, no flag
     const tier = record.tier
 
     // Validate input — never crash on malformed data.

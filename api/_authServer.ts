@@ -188,6 +188,11 @@ export function clearSessionCookie(): string {
   return expireCookie(SESSION_COOKIE)
 }
 
+/** Whether a session cookie is present at all (independent of validity). */
+export function hasSessionCookie(cookieHeader: string | undefined): boolean {
+  return !!parseCookies(cookieHeader)[SESSION_COOKIE]
+}
+
 /**
  * Read + verify the session cookie. Fails closed: any signature mismatch,
  * tampering, malformed value, or expiry returns null (never a partial session).
@@ -214,6 +219,31 @@ export function readSession(cookieHeader: string | undefined, secret: string): S
   if (typeof payload.exp !== 'number' || payload.exp < now) return null
   if (!payload.email) return null
   return { email: payload.email, name: payload.name ?? '', picture: payload.picture ?? '' }
+}
+
+/**
+ * Classify a request's session into the three distinct conditions so callers
+ * never conflate them (a stale cookie must self-heal, not block):
+ *   'guest'         — no session cookie at all → treat as guest.
+ *   'misconfigured' — cookie present but SESSION_SECRET missing/empty (server
+ *                     misconfiguration; can't verify anything).
+ *   'stale'         — cookie present but signature invalid or session expired
+ *                     (rotated secret, wrong environment, expiry). The caller
+ *                     should CLEAR the cookie (clearSessionCookie) and continue
+ *                     as a guest — never a hard error.
+ *   'valid'         — a verified session.
+ */
+export type SessionCheck =
+  | { status: 'guest' }
+  | { status: 'misconfigured' }
+  | { status: 'stale' }
+  | { status: 'valid'; user: SessionUser }
+
+export function checkSession(cookieHeader: string | undefined, secret: string | undefined): SessionCheck {
+  if (!hasSessionCookie(cookieHeader)) return { status: 'guest' }
+  if (!secret) return { status: 'misconfigured' }
+  const user = readSession(cookieHeader, secret)
+  return user ? { status: 'valid', user } : { status: 'stale' }
 }
 
 // ----- Google token exchange + ID token verification -----

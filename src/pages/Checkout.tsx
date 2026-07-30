@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { cn } from '../lib/utils'
-import { useCart } from '../store/cart'
+import { useCart, selectHasResolvedItems } from '../store/cart'
 import { PRODUCTS } from '../data/products'
 import { useLivePrices, useLiveSubtotal, useOutOfStockIds, isSoldOut } from '../store/livePrices'
 import { useB2BQuote } from '../store/b2bQuote'
 import { useAuth } from '../store/auth'
+import ContractPricingNotice from '../components/cart/ContractPricingNotice'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -167,6 +168,7 @@ export default function Checkout() {
   const overlays = useLivePrices((s) => s.overlays)
   const subtotal = useLiveSubtotal(items)
   const outOfStock = useOutOfStockIds(items)
+  const hasResolvedItems = useCart(selectHasResolvedItems)
   const clear = useCart((s) => s.clear)
   const quote = useB2BQuote()
   const authUser = useAuth((s) => s.user)
@@ -188,7 +190,29 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitCode, setSubmitCode] = useState<string | null>(null)
   const [placed, setPlaced] = useState<Order | null>(null)
+
+  // Friendly per-error-code message (raw code is shown separately, muted).
+  const messageForCode = (code: string | undefined): string => {
+    switch (code) {
+      case 'no_items':
+        return t('coErrNoItems')
+      case 'missing_customer':
+        return t('coErrMissing')
+      case 'bad_email':
+        return t('coErrEmail')
+      case 'bad_payment':
+        return t('coErrPayment')
+      case 'unknown_sku':
+      case 'no_price':
+        return t('coErrItemsUnavailable')
+      case 'out_of_stock':
+        return t('cartUnavailable')
+      default: // bad_body | order_failed | session_unavailable | network
+        return t('coError')
+    }
+  }
 
   // Live summary rows derived from the cart.
   const rows = useMemo<SummaryRow[]>(() => {
@@ -226,9 +250,11 @@ export default function Checkout() {
     // slipped through the cart (e.g. stock changed while the tab was open).
     if (outOfStock.size > 0) {
       setSubmitError(t('cartUnavailable'))
+      setSubmitCode('out_of_stock')
       return
     }
     setSubmitError(null)
+    setSubmitCode(null)
     setSubmitting(true)
 
     // Submit server-side. The browser sends only items+customer+payment — never
@@ -295,11 +321,14 @@ export default function Checkout() {
       } else {
         // Never show success on failure. Keep the cart + stay on the form.
         setSubmitting(false)
-        setSubmitError(data?.error === 'out_of_stock' ? t('cartUnavailable') : t('coError'))
+        const code = data?.error ?? 'order_failed'
+        setSubmitError(messageForCode(code))
+        setSubmitCode(code)
       }
     } catch {
       setSubmitting(false)
       setSubmitError(t('coError'))
+      setSubmitCode('network')
     }
   }
 
@@ -456,8 +485,15 @@ export default function Checkout() {
           {submitError && (
             <div className="mt-[14px] rounded-[12px] border border-[#e0b3a6] bg-[rgba(192,86,61,0.07)] px-[14px] py-[11px] text-[13px] text-[#a4452f]">
               {submitError}
+              {submitCode && (
+                <span className="mt-[3px] block text-[11px] text-muted">
+                  {t('coErrCodeLabel')}: {submitCode}
+                </span>
+              )}
             </div>
           )}
+
+          <ContractPricingNotice className="mt-[14px]" />
 
           {/* Premium loading shimmer while submitting */}
           {submitting && <div className="co-skel mt-[14px] h-[5px] w-full rounded-full" />}
@@ -469,11 +505,11 @@ export default function Checkout() {
           <button
             type="button"
             onClick={handlePlaceOrder}
-            disabled={submitting || outOfStock.size > 0}
+            disabled={submitting || outOfStock.size > 0 || !hasResolvedItems}
             className={cn(
               'gold-bg mt-[14px] flex w-full items-center justify-center gap-[10px] rounded-full py-[15px] text-[13px] font-semibold uppercase tracking-[0.08em] text-[#241c08] transition-transform duration-200',
               submitting ? 'cursor-wait opacity-90' : 'hover:-translate-y-[1px]',
-              outOfStock.size > 0 && 'cursor-not-allowed opacity-45 hover:translate-y-0',
+              (outOfStock.size > 0 || !hasResolvedItems) && 'cursor-not-allowed opacity-45 hover:translate-y-0',
             )}
           >
             {submitting ? (

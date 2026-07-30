@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { readSession } from './_authServer.js'
+import { checkSession, clearSessionCookie } from './_authServer.js'
 import {
   isAdminEmail,
   storageConfigured,
@@ -23,15 +23,21 @@ import {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store')
 
-  const secret = process.env.SESSION_SECRET
-  if (!secret) {
+  const sess = checkSession(req.headers.cookie, process.env.SESSION_SECRET)
+  if (sess.status === 'misconfigured') {
     console.error('[admin-resellers] SESSION_SECRET not set')
     return res.status(500).json({ error: 'Server misconfiguration' })
   }
+  // A stale/expired cookie must self-heal: clear it, then fall through to the
+  // 403 below (a guest is not an admin) — never a hard block on a stale cookie.
+  if (sess.status === 'stale') {
+    res.setHeader('Set-Cookie', clearSessionCookie())
+    console.warn('admin-resellers: stale session cookie cleared')
+  }
 
   // Gate: must be a signed-in admin. Anything else → 403, no detail.
-  const session = readSession(req.headers.cookie, secret)
-  if (!isAdminEmail(session?.email)) {
+  const email = sess.status === 'valid' ? sess.user.email : undefined
+  if (!isAdminEmail(email)) {
     return res.status(403).json({ error: 'Forbidden' })
   }
 

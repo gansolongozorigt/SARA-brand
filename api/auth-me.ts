@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { readSession } from './_authServer.js'
+import { checkSession, clearSessionCookie } from './_authServer.js'
 import { readReseller, selfView, storageConfigured, isAdminEmail } from './_reseller.js'
 
 /**
@@ -19,11 +19,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const secret = process.env.SESSION_SECRET
-  if (!secret) return res.status(200).json(null)
-
-  const user = readSession(req.headers.cookie, secret)
-  if (!user) return res.status(200).json(null)
+  // Three distinct session conditions (a stale cookie must self-heal, not linger):
+  const sess = checkSession(req.headers.cookie, process.env.SESSION_SECRET)
+  if (sess.status === 'guest') return res.status(200).json(null)
+  if (sess.status === 'misconfigured') {
+    console.error('[auth-me] SESSION_SECRET missing')
+    return res.status(502).json({ error: 'session_unavailable' })
+  }
+  if (sess.status === 'stale') {
+    // Clear the invalid/expired cookie so it stops being sent, then respond as guest.
+    res.setHeader('Set-Cookie', clearSessionCookie())
+    console.warn('auth-me: stale session cookie cleared')
+    return res.status(200).json(null)
+  }
+  const user = sess.user
 
   let reseller = selfView(undefined) // default: { status: 'none', tier: null, expiry: null }
   if (storageConfigured()) {
