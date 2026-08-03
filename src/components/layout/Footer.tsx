@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useT } from '../../i18n/LanguageContext'
+import { useLang, useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
 import { useAuth } from '../../store/auth'
+import { legalContent, type LegalDocKey } from '../../content/legal'
 
 const EXPLORE: { key: TranslationKey; to: string }[] = [
   { key: 'navProducts', to: '/' },
@@ -9,12 +10,22 @@ const EXPLORE: { key: TranslationKey; to: string }[] = [
   { key: 'navContact', to: '/contact' },
 ]
 
+// Legal pages — their permanent home. Labels come from the content layer titles
+// so they stay localized and can never drift from the page headings.
+const LEGAL: { docKey: LegalDocKey; to: string }[] = [
+  { docKey: 'delivery', to: '/delivery' },
+  { docKey: 'payment', to: '/payment' },
+  { docKey: 'returns', to: '/returns' },
+  { docKey: 'privacy', to: '/privacy' },
+]
+
 export default function Footer() {
   const t = useT()
+  const { lang } = useLang()
   const user = useAuth((s) => s.user)
   return (
     <footer className="bg-ink px-[26px] pb-[28px] pt-[54px] text-[#cfc6b4] max-[680px]:px-[22px] max-[680px]:pb-[24px] max-[680px]:pt-[40px]">
-      <div className="mx-auto grid max-w-[1240px] grid-cols-[1.4fr_1fr_1fr] gap-[34px] max-[980px]:grid-cols-2 max-[680px]:grid-cols-1 max-[680px]:gap-[24px]">
+      <div className="mx-auto grid max-w-[1240px] grid-cols-[1.4fr_1fr_1fr_1fr] gap-[34px] max-[980px]:grid-cols-2 max-[680px]:grid-cols-1 max-[680px]:gap-[24px]">
         {/* Brand + blurb — the SARA logo is gold on every background */}
         <div>
           <Link
@@ -54,6 +65,23 @@ export default function Footer() {
             <li className="cursor-pointer text-[14px] text-[#b8af9c] transition-colors duration-[250ms] hover:text-white">
               Instagram · Facebook
             </li>
+          </ul>
+        </div>
+
+        {/* Legal — permanent home for the four policy pages */}
+        <div>
+          <h5 className="mb-[14px] font-sans text-[12px] uppercase tracking-[0.18em] text-gold2">{t('footLegal')}</h5>
+          <ul className="flex flex-col gap-[9px]">
+            {LEGAL.map(({ docKey, to }) => (
+              <li key={docKey}>
+                <Link
+                  to={to}
+                  className="text-[14px] text-[#b8af9c] transition-colors duration-[250ms] hover:text-white"
+                >
+                  {legalContent[lang][docKey].title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>

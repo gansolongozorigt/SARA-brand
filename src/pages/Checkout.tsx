@@ -8,6 +8,7 @@ import { useLivePrices, useLiveSubtotal, useOutOfStockIds, isSoldOut } from '../
 import { useB2BQuote } from '../store/b2bQuote'
 import { useAuth } from '../store/auth'
 import ContractPricingNotice from '../components/cart/ContractPricingNotice'
+import ConsentNotice from '../components/legal/ConsentNotice'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -501,6 +502,9 @@ export default function Checkout() {
           {outOfStock.size > 0 && (
             <div className="mt-[14px] text-center text-[12.5px] text-muted">{t('cartUnavailable')}</div>
           )}
+
+          {/* Consent — placing the order implies agreement with the privacy policy */}
+          <ConsentNotice className="mt-[14px]" />
 
           <button
             type="button"

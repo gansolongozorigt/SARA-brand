@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { useT } from '../i18n/LanguageContext'
 import type { TranslationKey } from '../i18n'
 import { submitContact } from '../lib/submitContact'
+import ConsentNotice from '../components/legal/ConsentNotice'
 
 const PHONE_DISPLAY = '89983612'
 const PHONE_TEL = '+97689983612'
@@ -158,6 +159,9 @@ export default function Contact() {
               >
                 {t('contactFormSubmit')}
               </button>
+
+              {/* Consent — sending the message implies agreement with the privacy policy */}
+              <ConsentNotice />
             </div>
           )}
         </motion.div>

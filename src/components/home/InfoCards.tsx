@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { useT } from '../../i18n/LanguageContext'
 import type { TranslationKey } from '../../i18n'
 
@@ -6,8 +7,14 @@ interface InfoItem {
   icon: ReactNode
   titleKey: TranslationKey
   textKey: TranslationKey
+  to: string
 }
 
+// Each card is an entry point to its policy page. Real <Link>s → keyboard
+// accessible, focus-ring visible. Motion is restrained (see .info-card in
+// index.css): a 2–3px lift + a thin gold underline easing in over ~200ms, no
+// rotation/bounce/scale. The route change itself fades + slides up on the
+// destination page (see LegalPage).
 const INFO: InfoItem[] = [
   {
     icon: (
@@ -19,6 +26,7 @@ const INFO: InfoItem[] = [
     ),
     titleKey: 'delivTitle',
     textKey: 'delivText',
+    to: '/delivery',
   },
   {
     icon: (
@@ -29,6 +37,7 @@ const INFO: InfoItem[] = [
     ),
     titleKey: 'payTitle',
     textKey: 'payText',
+    to: '/payment',
   },
   {
     icon: (
@@ -39,6 +48,7 @@ const INFO: InfoItem[] = [
     ),
     titleKey: 'retTitle',
     textKey: 'retText',
+    to: '/returns',
   },
 ]
 
@@ -47,11 +57,12 @@ export default function InfoCards() {
   return (
     <section className="info-sec">
       {INFO.map((card) => (
-        <div key={card.titleKey} className="info-card reveal">
+        <Link key={card.titleKey} to={card.to} className="info-card reveal">
           <div className="ic">{card.icon}</div>
           <h4>{t(card.titleKey)}</h4>
           <p>{t(card.textKey)}</p>
-        </div>
+          <span className="u" aria-hidden />
+        </Link>
       ))}
     </section>
   )
