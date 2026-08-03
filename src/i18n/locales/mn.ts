@@ -20,7 +20,7 @@ export const mn = {
   aboutP1: "SARA бол Монгол эмэгтэйн бүтээсэн гоо сайхны брэнд юм. Бид байгалийн гаралтай, найдвартай найрлагыг тансаг загвартай хослуулдаг.",
   aboutP2: "Арьс арчилгаанаас үнэртэн хүртэл — өдөр бүрийн урлагийг тань тансаг болгох зорилготой.",
   statProducts: "Бүтээгдэхүүн",
-  statNatural: "Байгалийн",
+  statCategories: "Ангилал",
   statLang: "Хэл",
   contactH: "Захиалга, зөвлөгөө авах уу?",
   addCart: "Сагсанд нэмэх",
@@ -91,7 +91,10 @@ export const mn = {
   delivTitle: "Хүргэлт",
   delivText: "Улаанбаатар хотод 24 цагт хүргэнэ. Орон нутагт 2–4 хоног. 100,000₮-аас дээш үнэгүй.",
   payTitle: "Төлбөр",
-  payText: "QPay, банкны шилжүүлэг, бэлэн мөнгөөр төлөх боломжтой. Найдвартай, аюулгүй.",
+  // Checkout only offers bank transfer (prepayment). Cash on delivery was
+  // removed and QPay is NOT integrated yet — when either is wired up, re-add it
+  // here to payText in all 5 locales.
+  payText: "Банкны шилжүүлгээр урьдчилан төлөх боломжтой. Найдвартай, аюулгүй.",
   retTitle: "Буцаалт",
   retText: "Нээгээгүй бүтээгдэхүүнийг 7 хоногийн дотор солих, буцаах боломжтой.",
   revKick: "Сэтгэгдэл",
