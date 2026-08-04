@@ -22,7 +22,7 @@ export const en: Record<TranslationKey, string> = {
   aboutP1: "SARA is a beauty brand created by a Mongolian woman. We blend naturally derived, trusted formulas with refined design.",
   aboutP2: "From skincare to fragrance — our goal is to turn your daily ritual into an art.",
   statProducts: "Products",
-  statNatural: "Natural",
+  statCategories: "Categories",
   statLang: "Languages",
   contactH: "Ready to order or need advice?",
   addCart: "Add to cart",
@@ -93,7 +93,7 @@ export const en: Record<TranslationKey, string> = {
   delivTitle: "Delivery",
   delivText: "Ulaanbaatar 24–48 hrs. Countryside 2–5 days by intercity carrier. Free delivery over 100,000₮.",
   payTitle: "Payment",
-  payText: "Pay by QPay, bank transfer or cash. Safe and reliable.",
+  payText: "Prepay by bank transfer. Safe and reliable.",
   retTitle: "Returns",
   retText: "Unopened products can be exchanged or returned within 7 days.",
   // ----- Legal pages (delivery / payment / returns / privacy) -----

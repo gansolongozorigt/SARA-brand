@@ -12,13 +12,14 @@ import ConsentNotice from '../components/legal/ConsentNotice'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
+import { BANK_ACCOUNTS, BANK_NAMES } from '../data/bank'
 
-// Shop's bank-transfer details shown on the confirmation screen.
-const BANK = {
-  bank: 'Хаан банк (Khan Bank)',
-  account: '020005005720871790',
-  recipient: 'Г.Урантуяа',
-}
+// Payment methods offered in the UI. Cash on delivery ('cod') is intentionally
+// NOT listed: the business runs on prepayment ("delivered within 24–48h after
+// payment is received and confirmed"), which COD contradicts. The 'cod' branch
+// stays in the PaymentMethod type and the server so it can be re-enabled in one
+// line — just add 'cod' back to this array.
+const PAYMENT_METHODS: PaymentMethod[] = ['bank']
 
 interface SummaryRow {
   id: string
@@ -103,32 +104,40 @@ function OrderSummary({
   )
 }
 
-/** Bank-transfer instructions — confirmation view, bank payment only. */
+/** Bank-transfer instructions — confirmation view, bank payment only.
+ *  Reads every account from the single source of truth in src/data/bank.ts. */
 function BankDetails() {
   const t = useT()
-  const rows: [string, string, boolean][] = [
-    [t('coBankBank'), BANK.bank, false],
-    [t('coBankAcc'), BANK.account, true],
-    [t('coBankRecipient'), BANK.recipient, false],
-  ]
   return (
     <div className="mt-[20px] rounded-[18px] border border-gold/30 bg-paper p-[22px]">
       <h3 className="font-serif text-[18px] font-semibold text-ink">{t('coBankTitle')}</h3>
-      <dl className="mt-[14px] flex flex-col gap-[10px]">
-        {rows.map(([label, value, mono]) => (
-          <div key={label} className="flex items-center justify-between gap-[16px]">
-            <dt className="text-[12.5px] uppercase tracking-[0.06em] text-muted">{label}</dt>
-            <dd
-              className={cn(
-                'select-all text-right text-[14px] font-medium text-ink',
-                mono && 'font-mono tracking-[0.04em]',
-              )}
-            >
-              {value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      {BANK_ACCOUNTS.map((acc, i) => {
+        const rows: [string, string, boolean][] = [
+          [t('coBankBank'), acc.bank, false],
+          [t('coBankAcc'), acc.account, true],
+          [t('coBankRecipient'), acc.recipient, false],
+        ]
+        return (
+          <dl
+            key={acc.account}
+            className={cn('flex flex-col gap-[10px]', i === 0 ? 'mt-[14px]' : 'mt-[14px] border-t border-line pt-[14px]')}
+          >
+            {rows.map(([label, value, mono]) => (
+              <div key={label} className="flex items-center justify-between gap-[16px]">
+                <dt className="text-[12.5px] uppercase tracking-[0.06em] text-muted">{label}</dt>
+                <dd
+                  className={cn(
+                    'select-all text-right text-[14px] font-medium text-ink',
+                    mono && 'font-mono tracking-[0.04em]',
+                  )}
+                >
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )
+      })}
       <p className="mt-[14px] border-t border-line pt-[12px] text-[13px] leading-relaxed text-muted">
         {t('coBankNote')}
       </p>
@@ -443,7 +452,7 @@ export default function Checkout() {
             <div>
               <span className="mb-[8px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('payMethod')}</span>
               <div className="flex flex-col gap-[10px] sm:flex-row">
-                {(['bank', 'cod'] as PaymentMethod[]).map((m) => {
+                {PAYMENT_METHODS.map((m) => {
                   const active = payment === m
                   return (
                     <button
@@ -462,7 +471,9 @@ export default function Checkout() {
                         </span>
                         <span className="text-[14px] font-medium text-ink">{m === 'bank' ? t('bankName') : t('cashName')}</span>
                       </span>
-                      <span className="mt-[5px] block pl-[26px] text-[12.5px] text-muted">{m === 'bank' ? t('bankDesc') : t('cashDesc')}</span>
+                      {/* Bank names come from the single source of truth, not i18n copy,
+                          so the selector can never advertise an unconfigured account. */}
+                      <span className="mt-[5px] block pl-[26px] text-[12.5px] text-muted">{m === 'bank' ? BANK_NAMES : t('cashDesc')}</span>
                     </button>
                   )
                 })}

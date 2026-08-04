@@ -25,7 +25,7 @@ export const ko: Record<TranslationKey, string> = {
   aboutP1: "SARA는 몽골 여성이 만든 뷰티 브랜드입니다. 자연에서 유래한 믿을 수 있는 성분과 정제된 디자인을 담았습니다.",
   aboutP2: "스킨케어부터 향수까지 — 당신의 매일의 루틴을 하나의 예술로 만드는 것이 저희의 목표입니다.",
   statProducts: "제품",
-  statNatural: "자연 유래",
+  statCategories: "카테고리",
   statLang: "언어",
   contactH: "주문 또는 상담이 필요하신가요?",
   addCart: "장바구니 담기",
@@ -97,7 +97,7 @@ export const ko: Record<TranslationKey, string> = {
   delivTitle: "배송",
   delivText: "울란바토르 24–48시간. 지방은 시외 운송으로 2–5일. 100,000₮ 이상 배송 무료.",
   payTitle: "결제",
-  payText: "QPay, 계좌이체 또는 현금으로 결제하세요. 안전하고 믿을 수 있습니다.",
+  payText: "계좌이체 선결제로 진행됩니다. 안전하고 믿을 수 있습니다.",
   retTitle: "반품",
   retText: "미개봉 제품은 7일 이내 교환 또는 반품이 가능합니다.",
   // ----- Legal pages (delivery / payment / returns / privacy) -----

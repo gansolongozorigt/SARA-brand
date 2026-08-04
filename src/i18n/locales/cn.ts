@@ -22,7 +22,7 @@ export const cn: Record<TranslationKey, string> = {
   aboutP1: "SARA 是由一位蒙古女性创立的美妆品牌。我们将天然萃取的可靠配方与精致设计相融合。",
   aboutP2: "从护肤到香氛——我们致力于让您的日常护理成为一种艺术。",
   statProducts: "产品",
-  statNatural: "天然",
+  statCategories: "分类",
   statLang: "语言",
   contactH: "想下单或需要咨询？",
   addCart: "加入购物车",
@@ -93,7 +93,7 @@ export const cn: Record<TranslationKey, string> = {
   delivTitle: "配送",
   delivText: "乌兰巴托 24–48 小时。外省经客运班车 2–5 天。满 100,000₮ 免运费。",
   payTitle: "支付",
-  payText: "支持 QPay、银行转账与现金支付，安全可靠。",
+  payText: "支持银行转账预付，安全可靠。",
   retTitle: "退换",
   retText: "未开封产品可在 7 天内换货或退货。",
   // ----- Legal pages (delivery / payment / returns / privacy) -----
