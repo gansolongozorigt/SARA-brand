@@ -103,8 +103,6 @@ export const ru: Record<TranslationKey, string> = {
   legalBasisHeading: "Правовое основание",
   legalMongolianOriginal: "Монгольский оригинал",
   consentText: "Оформляя заказ, вы подтверждаете, что ознакомились с нашей [[Политикой конфиденциальности]].",
-  revKick: "Отзывы",
-  revTitle: "Что говорят наши клиенты",
   signup: "Регистрация",
   login: "Войти",
   fName: "Имя",

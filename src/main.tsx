@@ -35,6 +35,7 @@ import '@fontsource/noto-sans-kr/700.css'
 import './index.css'
 import App from './App.tsx'
 import { LanguageProvider } from './i18n/LanguageContext'
+import { registerServiceWorker } from './lib/swUpdate'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -43,3 +44,7 @@ createRoot(document.getElementById('root')!).render(
     </LanguageProvider>
   </StrictMode>,
 )
+
+// Guarded PWA auto-update: fresh deploys load on the first visit, but never
+// reload a customer who is mid-checkout (see src/lib/swUpdate.ts).
+registerServiceWorker()

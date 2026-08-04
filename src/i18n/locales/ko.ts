@@ -107,8 +107,6 @@ export const ko: Record<TranslationKey, string> = {
   legalBasisHeading: "법적 근거",
   legalMongolianOriginal: "몽골어 원문",
   consentText: "주문을 제출하시면 [[개인정보 처리방침]]을 확인한 것으로 간주됩니다.",
-  revKick: "고객 후기",
-  revTitle: "고객의 이야기",
   signup: "회원가입",
   login: "로그인",
   fName: "이름",

@@ -112,20 +112,24 @@ export default function Contact() {
             </motion.div>
           ) : (
             <div className="flex flex-col gap-[16px]">
-              <label className="block">
-                <span className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormName')}</span>
+              <div className="block">
+                <label htmlFor="ct-name" className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormName')}</label>
                 <input
+                  id="ct-name"
+                  name="name"
                   className={cn('co-input', errors.name && 'err')}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={sending}
                   autoComplete="name"
                 />
-              </label>
+              </div>
 
-              <label className="block">
-                <span className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormPhone')}</span>
+              <div className="block">
+                <label htmlFor="ct-phone" className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormPhone')}</label>
                 <input
+                  id="ct-phone"
+                  name="phone"
                   className="co-input"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -133,18 +137,21 @@ export default function Contact() {
                   inputMode="tel"
                   autoComplete="tel"
                 />
-              </label>
+              </div>
 
-              <label className="block">
-                <span className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormMessage')}</span>
+              <div className="block">
+                <label htmlFor="ct-message" className="mb-[6px] block text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">{t('contactFormMessage')}</label>
                 <textarea
+                  id="ct-message"
+                  name="message"
                   className={cn('co-input co-textarea', errors.message && 'err')}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   disabled={sending}
                   rows={5}
+                  autoComplete="off"
                 />
-              </label>
+              </div>
 
               {failed && <p className="text-[13px] text-[#c0563d]">{t('coError')}</p>}
 

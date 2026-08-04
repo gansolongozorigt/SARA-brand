@@ -32,3 +32,12 @@ dist-ssr
 
 # macOS/iCloud accidental duplicate files ("foo 2.ts", "img 2.jpg", …)
 * 2.*
+
+# Stray working files parked in the repo root — raw photos and translation
+# scratch data. NOT imported by the app; listed by exact name so no real source
+# (any .json/.csv the build needs) is ever caught.
+SARA edited pic's/
+SARA products pic's/
+SARA_buteegdehuun_medeelel.csv
+SARA_translations_ALL.json
+translation_source.json

@@ -3,7 +3,6 @@ import Marquee from '../components/home/Marquee'
 import ProductGrid from '../components/product/ProductGrid'
 import About from '../components/home/About'
 import InfoCards from '../components/home/InfoCards'
-import Reviews from '../components/home/Reviews'
 import ContactStrip from '../components/home/ContactStrip'
 import { useReveal } from '../lib/useReveal'
 
@@ -16,7 +15,9 @@ export default function Home() {
       <ProductGrid />
       <About />
       <InfoCards />
-      <Reviews />
+      {/* Testimonials removed: the original three were invented prototype copy.
+          A real reviews block driven by approved WooCommerce product reviews
+          will go here later. */}
       <ContactStrip />
     </>
   )

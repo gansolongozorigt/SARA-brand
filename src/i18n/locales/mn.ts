@@ -105,8 +105,6 @@ export const mn = {
   legalMongolianOriginal: "Монгол эх",
   // [[...]] marks the /privacy link inside the sentence; the wrapper renders it.
   consentText: "Захиалга илгээснээр та [[Нууцлалын бодлого]]той танилцсанд тооцно.",
-  revKick: "Сэтгэгдэл",
-  revTitle: "Хэрэглэгчдийн сэтгэгдэл",
   signup: "Бүртгүүлэх",
   login: "Нэвтрэх",
   fName: "Нэр",

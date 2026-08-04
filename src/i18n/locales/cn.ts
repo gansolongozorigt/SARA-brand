@@ -103,8 +103,6 @@ export const cn: Record<TranslationKey, string> = {
   legalBasisHeading: "法律依据",
   legalMongolianOriginal: "蒙古文原文",
   consentText: "提交订单即表示您已阅读我们的[[隐私政策]]。",
-  revKick: "评价",
-  revTitle: "顾客的评价",
   signup: "注册",
   login: "登录",
   fName: "姓名",

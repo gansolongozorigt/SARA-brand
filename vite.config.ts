@@ -8,6 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // We register the SW ourselves (src/lib/swUpdate.ts) so we can guard the
+      // auto-reload: a new deployment refreshes on the FIRST visit, but never
+      // reloads the page out from under a customer who is mid-checkout.
+      injectRegister: false,
       // Existing static assets in /public that aren't import-referenced — precache them.
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'og-image.png'],
       manifest: {

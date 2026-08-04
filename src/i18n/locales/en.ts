@@ -103,8 +103,6 @@ export const en: Record<TranslationKey, string> = {
   legalBasisHeading: "Legal basis",
   legalMongolianOriginal: "Mongolian original",
   consentText: "By placing an order, you confirm that you have read our [[Privacy Policy]].",
-  revKick: "Reviews",
-  revTitle: "What our customers say",
   signup: "Sign up",
   login: "Log in",
   fName: "Name",

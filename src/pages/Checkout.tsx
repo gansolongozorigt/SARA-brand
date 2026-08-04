@@ -9,6 +9,7 @@ import { useB2BQuote } from '../store/b2bQuote'
 import { useAuth } from '../store/auth'
 import ContractPricingNotice from '../components/cart/ContractPricingNotice'
 import ConsentNotice from '../components/legal/ConsentNotice'
+import { setCheckoutActive } from '../lib/swUpdate'
 import { useLang, useT } from '../i18n/LanguageContext'
 import { useFormatPrice } from '../lib/useFormatPrice'
 import { type Order, type OrderItem, type PaymentMethod } from '../lib/submitOrder'
@@ -145,28 +146,34 @@ function BankDetails() {
   )
 }
 
-/** Labeled field wrapper with optional tag + inline error. */
+/** Labeled field wrapper with optional tag + inline error. `htmlFor` ties the
+ *  label to the input's id so browser/mobile autofill recognises the field. */
 function Field({
   label,
+  htmlFor,
   optional,
   error,
   children,
 }: {
   label: string
+  htmlFor: string
   optional?: boolean
   error?: string
   children: React.ReactNode
 }) {
   const t = useT()
   return (
-    <label className="block">
-      <span className="mb-[6px] flex items-center gap-[6px] text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted">
+    <div className="block">
+      <label
+        htmlFor={htmlFor}
+        className="mb-[6px] flex items-center gap-[6px] text-[12.5px] font-medium uppercase tracking-[0.07em] text-muted"
+      >
         {label}
         {optional && <em className="not-italic lowercase tracking-normal text-[11px] text-muted/70">({t('coOptional')})</em>}
-      </span>
+      </label>
       {children}
       {error && <span className="mt-[5px] block text-[12px] text-[#c0563d]">{error}</span>}
-    </label>
+    </div>
   )
 }
 
@@ -188,6 +195,13 @@ export default function Checkout() {
   useEffect(() => {
     quote.refresh(items)
   }, [items, quote.refresh])
+
+  // While the checkout page is mounted, hold any new-deployment auto-reload so it
+  // can't wipe the customer's half-filled form; it runs when they leave.
+  useEffect(() => {
+    setCheckoutActive(true)
+    return () => setCheckoutActive(false)
+  }, [])
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -419,33 +433,33 @@ export default function Checkout() {
         <div className={cn('transition-opacity', submitting && 'pointer-events-none opacity-60')} aria-busy={submitting}>
           <h2 className="font-serif text-[19px] font-semibold text-ink">{t('coCustomer')}</h2>
           <div className="mt-[16px] flex flex-col gap-[16px]">
-            <Field label={t('coFullName')} error={errors.fullName}>
-              <input className={cn(inputCls, errors.fullName && 'err')} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t('phName')} disabled={submitting} autoComplete="name" />
+            <Field label={t('coFullName')} htmlFor="co-name" error={errors.fullName}>
+              <input id="co-name" name="name" className={cn(inputCls, errors.fullName && 'err')} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t('phName')} disabled={submitting} autoComplete="name" />
             </Field>
 
             <div className="flex flex-col gap-[16px] sm:flex-row">
               <div className="min-w-0 sm:flex-1">
-                <Field label={t('fPhone')} error={errors.phone}>
-                  <input className={cn(inputCls, errors.phone && 'err')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phPhone')} disabled={submitting} inputMode="tel" autoComplete="tel" />
+                <Field label={t('fPhone')} htmlFor="co-phone" error={errors.phone}>
+                  <input id="co-phone" name="phone" className={cn(inputCls, errors.phone && 'err')} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('phPhone')} disabled={submitting} inputMode="tel" autoComplete="tel" />
                 </Field>
               </div>
               <div className="min-w-0 sm:flex-1">
-                <Field label={t('coCity')} error={errors.city}>
-                  <input className={cn(inputCls, errors.city && 'err')} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('phCity')} disabled={submitting} autoComplete="address-level2" />
+                <Field label={t('coCity')} htmlFor="co-city" error={errors.city}>
+                  <input id="co-city" name="city" className={cn(inputCls, errors.city && 'err')} value={city} onChange={(e) => setCity(e.target.value)} placeholder={t('phCity')} disabled={submitting} autoComplete="address-level2" />
                 </Field>
               </div>
             </div>
 
-            <Field label={t('coAddress')} error={errors.address}>
-              <input className={cn(inputCls, errors.address && 'err')} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('phAddress')} disabled={submitting} autoComplete="street-address" />
+            <Field label={t('coAddress')} htmlFor="co-address" error={errors.address}>
+              <input id="co-address" name="address" className={cn(inputCls, errors.address && 'err')} value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('phAddress')} disabled={submitting} autoComplete="street-address" />
             </Field>
 
-            <Field label={t('fEmail')} optional error={errors.email}>
-              <input className={cn(inputCls, errors.email && 'err')} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('phEmail')} disabled={submitting} inputMode="email" autoComplete="email" />
+            <Field label={t('fEmail')} htmlFor="co-email" optional error={errors.email}>
+              <input id="co-email" name="email" className={cn(inputCls, errors.email && 'err')} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('phEmail')} disabled={submitting} inputMode="email" autoComplete="email" />
             </Field>
 
-            <Field label={t('coNote')} optional>
-              <textarea className={cn(inputCls, 'co-textarea')} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('phNote')} disabled={submitting} rows={3} />
+            <Field label={t('coNote')} htmlFor="co-note" optional>
+              <textarea id="co-note" name="note" className={cn(inputCls, 'co-textarea')} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('phNote')} disabled={submitting} rows={3} autoComplete="off" />
             </Field>
 
             {/* Payment method */}
